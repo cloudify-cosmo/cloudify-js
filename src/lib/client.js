@@ -1,10 +1,35 @@
 'use strict';
 
+/**
+ * @callback ApiCallback
+ * @param error an error if one occurred. null or undefined otherwise.
+ * @param response the http response
+ * @param body the http response body
+ * @description callback for API calls.
+ */
 
-function Client(){
+/**
+ * @typedef {object}  ClientConfig
+ * @property {string} endpoint the cloudify rest api endpoint. (e.g. http://manager-host-ip)
+ * @property {object} [request] a request implementation. {@see https://www.npmjs.com/package/browser-request} . {@see https://www.npmjs.com/package/request}
+ * frontend implementations will pass the browser version, and nodejs version should pass the node version.
+ *
+ *
+ **/
 
+/**
+ *
+ * @type {Blueprints}
+ */
+var Blueprints = require('./blueprints');
+/**
+ *
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function Client( config ){
+
+    this.blueprints = new Blueprints( config );
 }
-
-
 
 module.exports = Client;

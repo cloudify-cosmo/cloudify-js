@@ -1,0 +1,23 @@
+<html>
+<head>
+
+</head>
+<body>
+
+<div ng-app="cloudifyjsApp" ng-controller="cloudifyjsCtrl">
+    <h1>hello {{name}}</h1>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.js"></script>
+<script src="cloudify.angular.js"></script>
+<script>
+    angular.module('cloudifyjsApp', [ 'cloudifyjs']);
+    angular.module('cloudifyjsApp').controller('cloudifyjsCtrl', function($scope, $log, CloudifyClient ){
+        var client = new CloudifyClient( { 'endpoint' : 'http://cloudify.localhost.com' } );
+        client.blueprints.list( null, function(err, response, body ){
+            $log.info('this is body', body);
+        });
+    });
+</script>
+</body>
+</html>

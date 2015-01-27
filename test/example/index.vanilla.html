@@ -1,0 +1,19 @@
+<html>
+<head>
+
+</head>
+<body>
+
+<div>
+    <h1>Vanilla Test Page</h1>
+</div>
+
+<script src="cloudify.vanilla.js"></script>
+<script>
+    var client = new window.CloudifyClient({'endpoint': 'http://cloudify.localhost.com'});
+    client.blueprints.list(null, function (err, response, body) {
+        console.log('this is body', body);
+    });
+</script>
+</body>
+</html>
