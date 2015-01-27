@@ -29,7 +29,7 @@ You can have a look at the [test/examples](test/exmaple) folder for an example f
 npm install --save cloudify-js
 ```
 
-```
+```javascript
 var CloudifyClient = require('cloudify-js').CloudifyClient;
 
 var client = new CloudifyClient({'endpoint' : 'http://cloudify.localhost.com'});
@@ -46,7 +46,7 @@ client.blueprints.list(null, function( err, response, body){
 bower install --save cloudify-js
 ```
 
-```
+```html
 <script src="bower_components/cloudify-js/dist/cloudify.vanilla.js"></script>
 <script>
     var client = new window.CloudifyClient({'endpoint': 'http://cloudify.localhost.com'});
@@ -63,7 +63,7 @@ bower intall --save cloudify-js
 ```
 
 
-```
+```html
 <script src="bower_components/cloudify-js/dist/cloudify.angular.js"></script>
 <script>
     angular.module('cloudifyjsApp', [ 'cloudifyjs']);
@@ -83,7 +83,7 @@ bower intall --save cloudify-js
 bower install --save cloudify-js
 ```
 
-```
+```html
 <script src="bower_components/cloudify-js/dist/cloudify.jquery.js"></script>
 <script>
     var client = new $.CloudifyClient({'endpoint' : 'http://cloudify.localhost.com'});
