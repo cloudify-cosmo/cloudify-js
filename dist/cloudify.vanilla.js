@@ -4003,7 +4003,7 @@ logger.trace('cloudifyjs is ready for use');
 },{"./lib/client":20,"browser-request":1,"log4js":15}],19:[function(require,module,exports){
 'use strict';
 
-var logger = require('log4js').getLogger('blueprints');
+var logger = require('log4js').getLogger('cloudify.blueprints');
 /**
  * @typedef {object} Blueprint
  *
@@ -4015,20 +4015,19 @@ var logger = require('log4js').getLogger('blueprints');
 /**
  * @description
  * collection of API calls for blueprints
- * @class Blueprints
+ * @class BlueprintsClient
  * @param {ClientConfig} config
  * @constructor
  */
-function Blueprints( config ){
+function BlueprintsClient( config ){
     this.config = config;
 }
 
 /**
- * @param {string} _include list of fields to include in response
- * @param {ApiCallback} callback
- * @returns {Array<Blueprint>} a list of currently stored blueprints.
+ * @param {IncludeParam} [_include] list of fields to include in response
+ * @param {ApiCallback} callback body gets a list of blueprints
  */
-Blueprints.prototype.list = function( _include, callback ){
+BlueprintsClient.prototype.list = function( _include, callback ){
     logger.trace('listing blueprints');
     var qs = {};
     if ( !!_include ){
@@ -4041,7 +4040,76 @@ Blueprints.prototype.list = function( _include, callback ){
     }, callback );
 };
 
-module.exports = Blueprints;
+/**
+ * @description
+ * Gets  a bluprint by its id.
+ * @param {string} blueprint_id Blueprint's id to get
+ * @param {IncludeParam} [_include] List of fields to include in response
+ * @param {ApiCallback} callback body gets the blueprint
+ */
+BlueprintsClient.prototype.get = function (blueprint_id, _include, callback) {
+    logger.trace('getting blueprint by id');
+    var qs = {};
+    if (!!_include) {
+        qs._include = _include;
+    }
+
+    return this.config.request({
+            'method': 'GET',
+            'url': String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id ),
+            'qs': qs
+        }, callback );
+};
+
+/**
+ * @description Deltes the blueprint whose id matches the provided blueprint id.
+ * @param {string} blueprint_id the id of the blueprint to be deleted
+ * @param {ApiCallback} callback body gets the deleted blueprint
+ */
+BlueprintsClient.prototype.delete = function(blueprint_id, callback ){
+    logger.trace('deleting blueprint');
+    return this.config.request({
+        'method' : 'DELETE',
+        'url' : String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id )
+    }, callback );
+};
+
+///// ONLY ADD FUNCTION THAT MIGHT NOT BE IMPLEMENTED FROM THIS POINT ON..
+
+// ignore undefined variables.
+/* jshint unused: false */
+/**
+ *
+ * @description
+ * uploads a blueprint to cloudify's manager.
+ *
+ * @exception error if function is not implemented. not all clients implement this function.
+ *
+ * @param {string} [blueprint_path] main blueprint yaml file path.
+ * @param {string} blueprint_id id of the uploaded blueprint
+ * @param {ApiCallback} callback body gets the uploaded blueprint
+ */
+BlueprintsClient.prototype.upload = function( blueprint_path , blueprint_id, callback ){
+    logger.trace('uploading blueprint');
+    throw new Error('this function is not implemented');
+};
+
+/**
+ *
+ * @description
+ * downloads aa previously uploaded blueprint from cloudify's manager.
+ *
+ * @param {string} blueprint_id
+ * @param {string} output_file
+ * @param {ApiCallback} callback body gets the path of downloaded  blueprint
+ */
+BlueprintsClient.prototype.download = function( blueprint_id, output_file, callback  ){
+    logger.trace('downloading blueprint');
+    throw new Error('this function is not implemented');
+};
+
+
+module.exports = BlueprintsClient;
 },{"log4js":15}],20:[function(require,module,exports){
 'use strict';
 
@@ -4051,6 +4119,15 @@ module.exports = Blueprints;
  * @param response the http response
  * @param body the http response body
  * @description callback for API calls.
+ */
+
+/**
+ * @typedef {???} CloudifyTimestamp
+ */
+
+/**
+ * @typedef {string} IncludeParam
+ * @description List of fields to include in response
  */
 
 /**
@@ -4064,9 +4141,17 @@ module.exports = Blueprints;
 
 /**
  *
- * @type {Blueprints}
+ * @type {ManagerClient}
  */
 var Blueprints = require('./blueprints');
+var Events = require('./events');
+var Deployments = require('./deployments');
+var Executions = require('./executions');
+var Manager = require('./manager');
+var NodeInstances = require('./nodeInstances');
+var Nodes = require('./nodes');
+var Search = require('./search');
+var Evaluate = require('./evaluate');
 /**
  *
  * @param {ClientConfig} config
@@ -4075,7 +4160,1059 @@ var Blueprints = require('./blueprints');
 function Client( config ){
 
     this.blueprints = new Blueprints( config );
+    this.events = new Events( config );
+    this.deployments = new Deployments( config );
+    this.executions = new Executions( config );
+    this.manager = new Manager( config );
+    this.nodeInstances = new NodeInstances( config );
+    this.nodes = new Nodes( config );
+    this.search = new Search( config );
+    this.evaluate = new Evaluate( config );
 }
 
 module.exports = Client;
-},{"./blueprints":19}]},{},[18]);
+
+
+
+
+/*****************************
+ * Add 'format' message to String.
+ ******************************/
+
+String.format = function() {
+    // The string containing the format items (e.g. "{0}")
+    // will and always has to be the first argument.
+    var theString = arguments[0];
+
+    // start with the second argument (i = 1)
+    for (var i = 1; i < arguments.length; i++) {
+        // "gm" = RegEx options for Global search (more than one instance)
+        // and for Multiline search
+        var regEx = new RegExp('\\{' + (i - 1) + '\\}', 'gm');
+        theString = theString.replace(regEx, arguments[i]);
+    }
+
+    return theString;
+};
+},{"./blueprints":19,"./deployments":21,"./evaluate":22,"./events":23,"./executions":24,"./manager":25,"./nodeInstances":26,"./nodes":27,"./search":28}],21:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.deployments');
+
+/**
+ * @typedef {object} Inputs
+ */
+
+/**
+ * @typedef {object} Outputs
+ */
+
+/**
+ * @typedef {object} Deployment
+ * @property {string} id the identifier of the deployment
+ * @property {string} blueprint_id the identifier of the blueprint this deployment elongs to.
+ * @property {Array<Workflow>} the workflows of this deployment.
+ * @property {Inputs} The inputs provided on deployment creation
+ * @property {Outputs} The outputs definition of this deployment
+ *
+ */
+
+/**
+ * @typedef {object} Workflow
+ * @property {string} id the workflow's id
+ * @property {string} name the workflow's name
+ * @property {???} parameters the workflows parameters
+ */
+
+/**
+ * @typedef {object} DeploymentOutputs
+ * @property {string} deployment_id
+ * @property {???} outputs
+ */
+
+
+/**
+ * @class DeploymentOutputsClient
+ * @description
+ * handles rest api calls specific for deployment outputs
+ * @constructor
+ */
+function DeploymentOutputsClient( config ){
+    this.config = config;
+}
+
+/**
+ *
+ * @description
+ * gets the outputs for the provided deployment's id.
+ * @param {string} deployment_id
+ * @param {ApiCallback} callback the body gets the outputs.
+ */
+DeploymentOutputsClient.prototype.get = function( deployment_id, callback  ){
+    logger.trace('getting deployment outputs');
+    if ( !deployment_id ){
+        callback(new Error('deployment_id is missing'));
+        return;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : String.format(this.config.endpoint + '/deployments/{0}/outputs', deployment_id )
+        },
+        callback
+    );
+};
+
+/**
+ * @typedef {object} DeploymentModificationNodeInstances
+ * @property {???} added_and_related list of added nodes and nodes that related to them
+ * @property {???} removed_and_related list of removed nodes and nodes that related to them
+ */
+
+/**
+ * @typedef {object} DeploymentModification
+ * @property {string} deployment_id deployment id the outputs belong to
+ * @property {object} node_instances
+ * @property {???} node_instances.added_and_related
+ * @property {???} node_instances.remove_and_related
+ * @property {???} modified_nodes original request modified nodes dict
+ */
+
+
+/**
+ * @class DeploymentModificationClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function DeploymentModificationClient( config ){
+    this.config = config;
+}
+
+
+/**
+ * @description
+ * start deployment modification
+ * @param {string} deployment_id the deployment id
+ * @param {???} nodes the nodes to modify
+ * @param {ApiCallback} callback body get the deployment modification
+ */
+DeploymentModificationClient.prototype.start = function( deployment_id, nodes, callback){
+    logger.trace('starting deployment modification');
+    if ( !deployment_id ){
+        callback(new Error('deployment_id is missing'));
+        return;
+    }
+
+    this.config.request(
+        {
+            'method' : 'PATCH',
+            'json' : true,
+            'url' : String.format(this.config.endpoint + '/deployments/{0}/modify', deployment_id ),
+            'body' : {
+                'stage' : 'start',
+                'nodes' : nodes
+            }
+        },
+        callback
+    );
+};
+
+/**
+ * @description
+ * finish deployment modification
+ * @param  {string} deployment_id the deployment id
+ * @param {???} modification the modification response received on 'start'
+ * @param {ApiCallback} callback body gets the deployment modification
+ */
+DeploymentModificationClient.prototype.finish = function( deployment_id, modification, callback ){
+    logger.trace('finishing deployment modification');
+
+    if ( !deployment_id ){
+        callback(new Error('deployment_id is missing'));
+        return;
+    }
+    this.config.request(
+        {
+            'method' : 'PATCH',
+            'json' : true,
+            'url' : String.format(this.config.endpoint + '/deployments/{0}/modify', deployment_id ),
+            'body' : {
+                'stage' : 'finish',
+                'modification' : modification
+            }
+        },
+        callback
+    );
+};
+
+/**
+ *
+ * @class DeploymentsClient
+ * @description api calls for deployments
+ * @param {ClientConfig} config
+ * @constructor
+ */
+
+function DeploymentsClient( config ){
+    this.config = config;
+}
+
+/**
+ * @description
+ * returns a list of all deployments
+ * @param {IncludeParam} [_include] list of fields to include in response
+ * @param {ApiCallback} callback body gets a list of deployments
+ */
+DeploymentsClient.prototype.list = function( _include, callback ){
+    logger.trace('lising deployments');
+    var qs = {};
+
+    if ( !!_include ){
+        qs._include = _include;
+    }
+
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : String.format(this.config.endpoint + '/deployments'  ),
+            qs : qs
+        },
+        callback
+    );
+
+};
+
+/**
+ * @description
+ * returns a deployment by its id.
+ * @param {string} deployment_id id of the deployment to get
+ * @param {IncludeParam} [_include] list of fields to include in response
+ * @param {ApiCallback} callback body gets deployment
+ */
+DeploymentsClient.prototype.get = function( deployment_id, _include, callback ){
+    logger.trace('getting deployment');
+  if ( !deployment_id ){
+      callback(new Error('blueprint_id is missing'));
+      return;
+  }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : String.format( this.config.endpoint  + '/deployments/{0}', deployment_id )
+        },
+        callback
+    );
+};
+
+
+/**
+ * @description
+ * creates a new deployment for the provided blueprint id and deployment id
+ * @param {string} blueprint_id blueprint id to create a deployment of
+ * @param {string} deployment_id deployment id of the new created deployment
+ * @param {object|null} [inputs] inputs obj for the deployment
+ * @param {ApiCallback} callback body get the created deployment
+ */
+DeploymentsClient.prototype.create = function( blueprint_id, deployment_id, inputs, callback ){
+    logger.trace('creating deployment');
+    if ( !blueprint_id ){
+        callback( new Error('blueprint_id is missing'));
+        return;
+    }
+
+    if ( !deployment_id ){
+        callback( new Error('deployment_id is missing'));
+        return;
+    }
+
+    var body = {
+        'blueprint_id': blueprint_id
+    };
+
+    if ( !inputs ){
+        body.inputs = inputs;
+    }
+
+    this.config.request(
+        {
+            'method' : 'PUT',
+            'json' : true,
+            'url' : String.format( this.config.endpoint + '/deployments/{0}', deployment_id ),
+            'body' : body
+        },
+        callback // expected status code 201
+    );
+};
+
+/**
+ *
+ * @description
+ * delets the deployment whose id matches the provided deployment id.
+ * by default, deployment with live nodes deletion is not allowed and
+ * this behavior can be changed using the ignore_live_nodes arguments.
+ *
+ * @param {string} deployment_id the deployment's to be deleted id.
+ * @param {boolean|null} [ignore_live_nodes=false] determines whether to ignore live nodes.
+ * @param {ApiCallback} callback body gets the deleted deployment
+ */
+DeploymentsClient.prototype.delete = function( deployment_id, ignore_live_nodes, callback ){
+    logger.trace('deleting deployment');
+    if ( !deployment_id ){
+        callback(new Error('deployment_id is missing'));
+        return;
+    }
+
+    var qs = {};
+
+    if ( ignore_live_nodes === true ){
+        qs.ignore_live_nodes = 'true';
+    }
+
+    this.config.request(
+        {
+            'method' : 'DELETE',
+            'url' : String.format( this.config.endpoint + '/deployments/{0}', deployment_id ),
+            qs: qs
+        },
+        callback
+    );
+};
+
+
+
+
+module.exports = DeploymentsClient;
+},{"log4js":15}],22:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.nodeInstances');
+
+/**
+ * @typedef EvaluatedFunc
+ * @property {string} deployment_id
+ * @property {object} payload
+ */
+
+/**
+ * @description
+ * collection of API calls for remote execution
+ * @class EvaluateClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function EvaluateClient( config ){
+    this.config = config;
+}
+
+/**
+ * @description evaluate intrinsic functions in payload in respect tohe provided context
+ * @param {string} deployment_id the deployment's id of the node
+ * @param {object} context the processing context
+ * @param {string} [context.self]
+ * @param {string} [context.source]
+ * @param {string} [context.target]
+ * @param {object} payload the payload to process
+ *
+ * @param {ApiCallback} callback body gets the payload with its intrinsic functions references evaluated.
+ */
+EvaluateClient.prototype.functions = function( deployment_id, context, payload, callback ){
+    logger.trace('evaluating');
+    this.config.request(
+        {
+            'method' : 'POST',
+            'url' : '/evaluate/functions',
+            'json' : true,
+            'body' : {
+                'deployment_id' : deployment_id,
+                'context' : context,
+                'payload' : payload
+            }
+        },
+        callback
+    );
+};
+
+module.exports = EvaluateClient;
+
+},{"log4js":15}],23:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.events');
+
+/**
+ * @description
+ * collection of API calls for events
+ * @class EventsClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function EventsClient( config ){
+    this.config = config;
+}
+
+EventsClient._create_events_query = function (execution_id, include_logs) {
+    var query = {
+        'bool': {
+            'must': [
+                {'match': {'context.execution_id': execution_id}},
+            ]
+        }
+    };
+    var match_cloudify_event = {'match': {'type': 'cloudify_event'}};
+    var match_cloudify_log = null;
+
+    if (include_logs) {
+        match_cloudify_log = {'match': {'type': 'cloudify_log'}};
+
+        query.bool.should = [
+            match_cloudify_event, match_cloudify_log
+        ];
+    } else {
+        query.bool.must.push(match_cloudify_event);
+    }
+
+    return query;
+};
+
+/**
+ * @description
+ * returns event for the provided execution id
+ * @param {string} execution_id - id of execution to get events for
+ * @param {number} [from_event=0] index of first event to retrieve on pagination
+ * @param {number} [batch_size=100] maximum number of events to retrieve per call
+ * @param {boolean} [include_logs=false] whether to also get logs
+ * @param {ApiCallback} callback body gets events list and total number of currently available events.
+ */
+EventsClient.prototype.get = function( execution_id, from_event, batch_size, include_logs , callback ){
+    logger.trace('getting events');
+    var qs = {
+        'sort' : [ {'@timestamp' : { 'order' : 'asc'} } ],
+        'query' : EventsClient._create_events_query( execution_id, include_logs )
+    };
+
+    if ( !isNaN(parseInt(from_event,10)) ){
+        qs.from = from_event;
+    }else{
+        qs.from = 0;
+    }
+
+    if ( !isNaN(parseInt(batch_size), 10 ) ){
+        qs.size = batch_size;
+    }else{
+        qs.size = 100;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : this.config.endpoint + '/events'
+
+        },
+        function( err, response, body ){
+            var myBody = {};
+            if ( !!body ){
+                myBody.total_events = response.hits.total;
+                myBody._source = response.hits.hits;
+            }
+            callback(err, response, body);
+        } );
+};
+
+
+module.exports = EventsClient;
+
+},{"log4js":15}],24:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.executions');
+/**
+ * @typedef {object} Execution
+ *
+ * @property {string} id The execution's id.
+ * @property {string} deployment_id the deployment's id this execution is related to.
+ * @property {string} the execution's status
+ * @property {string} error the execution error in a case of failure, otherwise null.
+ * @property {string} workflow_id the id of the workflow this execution represents.
+ * @property {object} parameters the execution's parameters
+ * @property {CloudifyTimestamp} created_at the execution creation time
+ */
+
+/**
+ * @description
+ * collection of API calls for executions
+ * @class ExecutionsClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function ExecutionsClient( config ){
+    this.config = config;
+}
+
+
+/**
+ *
+ * @description
+ * returns a list of executions
+ * @param {string|null} [deployment_id] optional deployment id to get executions for.
+ * @param {IncludeParam|null} [_include] list of fields to include in response.
+ * @param {ApiCallback} callback body gets executions list
+ */
+ExecutionsClient.prototype.list = function( deployment_id, _include, callback  ){
+    logger.trace('listing executions');
+    var qs = {};
+
+    if ( deployment_id ){
+        qs.deployment_id = deployment_id;
+    }
+
+    if ( _include ){
+        qs._include = _include;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : '/executions',
+            qs:qs
+        },
+        callback
+    );
+};
+
+
+/**
+ * @description
+ * get execution by its id.
+ * @param {string} execution_id id of the execution to get.
+ * @param {IncludeParam|null} [_include] list of fields to include in response.
+ * @param {ApiCallback} callback body gets the execution
+ */
+ExecutionsClient.prototype.get = function( execution_id, _include, callback ){
+    logger.trace('getting execution');
+    if ( !execution_id ){
+        callback(new Error('execution_id is missing'));
+        return;
+    }
+
+    var qs = {};
+
+    if ( _include ){
+        qs._include = _include;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : String.format( this.config.endpoint + '/executions/{0}', execution_id ),
+            'qs' : qs
+        },
+        callback
+    );
+};
+
+
+/**
+ *
+ * @description
+ * update execution with the provided status and optional error.
+ * @param {string} execution_id id of the execution to update
+ * @param {string} status updated execution status
+ * @param {string|null} [error] updated execution error
+ * @param {ApiCallback} callback body gets updated execution
+ */
+ExecutionsClient.prototype.update = function( execution_id, status, error, callback ){
+    logger.trace('updating execution');
+    if ( !execution_id ){
+        callback( new Error('execution_id is missing'));
+        return;
+    }
+
+    var body = { 'status' : status };
+    if ( !error ){
+        body.error = error;
+    }
+
+    this.config.request(
+        {
+            'method' : 'PATCH',
+            'url' : String.format( this.config.endpoint + '/executions/{0}', execution_id ),
+            'json' : true,
+            'body' : body
+        },
+        callback
+    );
+};
+
+/**
+ *
+ * @description
+ * starts a deployment's workflow execution whose id is provided.
+ *
+ * @param {string} deployment_id the deployment's id to execute a workflow for.
+ * @param {string} workflow_id the workflow to be executed id.
+ * @param {???|null} [parameters] parameters for the workflow execution.
+ * @param {boolean|null} [allow_custom_parameters=false] determines whether to allow parameters which weren't defined in
+ * the workflow parameters schema in the blueprint.
+ * @param {boolean|null} [force=false] determines whether to force the execution of the workflow in a case where there's
+ * an already running execution for this deployment.
+ * @param {ApiCallback} callback the body gets the created execution
+ */
+ExecutionsClient.prototype.start = function( deployment_id, workflow_id, parameters, allow_custom_parameters, force, callback ){
+    logger.trace('starting execution');
+    if ( !deployment_id ){
+        callback( new Error('deployment_id is missing'));
+        return;
+    }
+    if ( !workflow_id ){
+        callback( new Error('workflow_id is missing'));
+        return;
+    }
+
+    var body = {
+        'deployment_id' : deployment_id,
+        'workflow_id' : workflow_id
+    };
+
+    if ( parameters ){
+        body.parameters = parameters;
+    }
+
+    if ( allow_custom_parameters === true ){
+        body.parameters = 'true';
+    }else{
+        body.parameters = 'false';
+    }
+
+    if ( force === true ){
+        body.force = 'true';
+    }else{
+        body.force = 'false';
+    }
+
+    this.config.request(
+        {
+            'method' : 'POST',
+            'url' : this.config.endpoint + '/executions',
+            'body' : body,
+            'json' : true
+        },
+        callback
+    );
+};
+
+/**
+ *
+ * @description
+ * cancels the execution which matches the provided execution id.
+ * @param {string} execution_id id of the execution to cancel
+ * @param {boolean|null} [force=false] whether to send a 'cancel' or a 'force-cancel' action
+ * @param {ApiCallback} callback body gets cancelled execution
+ */
+ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
+    logger.trace('cancelling execution');
+    if ( !execution_id ){
+        callback( new Error('execution_id is missing'));
+        return;
+    }
+
+    var body = {};
+
+    if ( force === true ){
+        body.action = 'force-cancel';
+    }else{
+        body.action = 'cancel';
+    }
+
+    this.config.request(
+        {
+            'method' : 'POST',
+            'url' : '/executions/{0}',
+            'json' : true,
+            'body' : body
+        },
+        callback // expected status code = 201
+    );
+};
+
+
+module.exports = ExecutionsClient;
+},{"log4js":15}],25:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.manager');
+
+
+/**
+ * @description
+ * collection of API calls for manager
+ * @class ManagerClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function ManagerClient( config ){
+    this.config = config;
+}
+
+/**
+ * @description
+ * management machine status
+ * @param {ApiCallback} callback body gets the status
+ */
+ManagerClient.prototype.get_status = function( callback ){
+    logger.trace('getting status');
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : this.config.endpoint + '/status'
+        },
+        callback
+    );
+};
+
+/**
+ * @description
+ * cloudify's management machine version information
+ * @param {ApiCallback} callback body gets the version information
+ */
+ManagerClient.prototype.get_version = function( callback ){
+    logger.trace('getting version');
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : '/version'
+        },
+        callback
+    );
+};
+
+/**
+ * @description
+ * gets the context which was stored on management machine bootstrap.
+ * The context contains cloudify specific information and cloud provider specific information
+
+ * @param {IncludeParam|null} [_include=null] list of fields to include in response
+ * @param {ApiCallback} callback body gets the context stored in manager
+ */
+ManagerClient.prototype.get_context = function( _include, callback ){
+    logger.trace('getting context');
+    var qs = {};
+    if ( _include ){
+        qs._include = _include;
+    }
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : '/provider/context',
+            'qs': qs
+        },
+        callback
+    );
+};
+
+/**
+ * @description
+ * creates context in cloudify's management machine.
+ * this method is usually invoked right after management machine
+ * bootstrap with relevant cloudify and cloud provider context information
+ *
+ * @param {string} name cloud provider name
+ * @param {???} context context
+ * @param {ApiCallback} callback body gets create context result
+ */
+ManagerClient.prototype.create_context = function( name, context, callback ){
+    logger.trace('creating context');
+    if ( !name ){
+        callback(new Error('name is missing'));
+        return;
+    }
+
+    if ( !context ){
+        callback(new Error('context is missing'));
+        return;
+    }
+
+    var body = { 'name': name, 'context' : context };
+
+    this.config.request(
+        {
+            'method' : 'POST',
+            'url' : '/provider/context',
+            body: body
+        },
+        callback // expected status code 201
+    );
+};
+
+
+module.exports = ManagerClient;
+},{"log4js":15}],26:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.nodeInstances');
+
+/**
+ * @typedef {object} NodeInstance
+ * @property {string} id the identifier of the node instance
+ * @property {string} node_id the identifier of the node whom this is the instance of.
+ * @property {???} relationships the node instance relationships
+ * @property {string} host_id the node instance host_id
+ * @property {string} deployment_id the deployment id the node instance belongs to
+ * @property {???} runtime_properties the runtime properties of the node instance
+ * @property {string} state the current state of the node instance
+ * @property {number} version the current version of the node instance - used for optimistic locking on update)
+ */
+
+/**
+ * @description
+ * collection of API calls for node instances
+ * @class NodeInstancesClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function NodeInstancesClient( config ){
+    this.config = config;
+}
+
+/**
+ * @description
+ * returns the node instance for the provided node instance id.
+ * @param {string} node_instance_id the identifier of the node instance to get
+ * @param {IncludeParam|null} [_include=null] list of fields to include in response
+ * @param {ApiCallback} callback body gets the retrieved node instance
+ */
+NodeInstancesClient.prototype.get = function( node_instance_id, _include, callback ){
+    logger.trace('getting node instances');
+    if ( !node_instance_id ){
+        callback( new Error('node_instance_id is missing'));
+        return;
+    }
+
+    var qs = {};
+
+    if ( _include ){
+        qs._include = _include;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : String.format( this.config.endpoint + '/node-instances/{0}', node_instance_id),
+            'qs': qs
+        },
+        callback
+    );
+};
+
+/**
+ * @description
+ * update node instance with the provided state & runtime_properties
+ *
+ * @param {string} node_instance_id the identifier of the node instance to update
+ * @param {string|null} [state] the updated state
+ * @param {???|null} [runtime_properties=null] the updated runtime properties
+ * @param {number} [version=0] current version value of this node instance in cloudify's storage (used for optimistic locking)
+ * @param {ApiCallback} callback body gets the updated node instance
+ */
+NodeInstancesClient.prototype.update = function( node_instance_id, state, runtime_properties, version , callback ){
+    logger.trace('updating node instance');
+    if ( !node_instance_id ){
+        callback(new Error('node_instance_id is missing'));
+    }
+
+    if ( isNaN(parseInt(version))){
+        version = 0;
+    }
+
+    var body = {
+        'version' : version
+    };
+
+    if ( runtime_properties ){
+        body.runtime_properties = runtime_properties;
+    }
+
+    if ( state ){
+        body.state = state;
+    }
+
+    this.config.request(
+        {
+            'method' : 'PATCH',
+            'url' : String.format( this.config.endpoint + '/node-instances/{0}', node_instance_id ),
+            'json'  : true,
+            'body' : body
+        },
+        callback
+    );
+};
+
+
+/**
+ * @description
+ * returns a list of node instances which belong to the deployment identified by the provided deployment id.
+ * @param {string|null} [deployment_id=null] deployment id to list node instances for.
+ * @param {string|null} [node_name=null] node id to only fetch node instances with this name.
+ * @param {IncludeParam|null} [_include=null] list of fields to include in response
+ * @param {ApiCallback} callback body gets list of node instances
+ */
+NodeInstancesClient.prototype.list = function( deployment_id, node_name, _include , callback ){
+    logger.trace('listing node instances');
+    var qs = {};
+
+    if ( deployment_id ){
+        qs.deployment_id = deployment_id;
+    }
+
+    if ( node_name ){
+        qs.node_name = node_name;
+    }
+
+    if (_include){
+        qs._include = _include;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : this.config.endpoint + '/node-instances',
+            'qs' : qs
+        },
+        callback
+    );
+};
+
+
+module.exports = NodeInstancesClient;
+},{"log4js":15}],27:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.nodeInstances');
+
+/**
+ * @typedef {object} Node
+ * @property {string} id the identifier of the node
+ * @property {string} deployment_id the deployment id the node instance belongs to
+ * @property {???} properties the static properties of the node
+ * @property {object} operations the node operations mapped to plugins
+ * @property {[]} relationships the node instance relationships
+ * @property {string} blueprint_id the id of the blueprint this node belongs to.
+ * @property {object} plugins the plug
+ * @property {number} number_of_instances the umber of instances this node has
+ * @property {number} deploy_number_of_instances the number of instances set for this node when the deployment was created
+ * @property {string} host_id the id of the node instance which hosts this node
+ * @property {[]} type_hierarchy the type hierarchy of this node
+ * @property {string} type the type of this node
+ */
+
+/**
+ * @description
+ * collection of API calls for node
+ * @class NodesClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function NodesClient( config ){
+    this.config = config;
+}
+
+
+/**
+ * @description
+ * returns a list of nodes which belongs to the deployment identified by the provided deployment id.
+ * @param {string|null} [deployment_id=null] the deployment's id to list nodes for.
+ * @param {string|null} [node_id=null] response will filter nodes by this id.
+ * @param {IncludeParam|null} [_include=null] list of fields to include in response
+ * @param {ApiCallback} callback body gets list of nodes
+ */
+NodesClient.prototype.list = function( deployment_id, node_id, _include , callback ){
+    logger.trace('listing nodes');
+    var qs = {};
+
+    if ( deployment_id ){
+        qs.deployment_id = deployment_id;
+    }
+
+    if ( node_id ){
+        qs.node_id = node_id;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : '/nodes',
+            qs: qs
+        },
+        callback
+    );
+};
+
+/**
+ * @description
+ * returns the node which belongs to the deployment identified by the provided deployment id.
+ * @param {string} deployment_id the deployment's id of the node.
+ * @param {string} node_id the node id
+ * @param {IncludeParam|null} [_include=null]
+ * @param {ApiCallback} callback body gets list of nodes
+ */
+NodesClient.prototype.get = function( deployment_id, node_id, _include, callback ){
+    logger.trace('getting nodes');
+    if ( !deployment_id ){
+        callback( new Error('deployment_id is missing'));
+        return;
+    }
+
+    if ( !node_id ){
+        callback( new Error('node_id is missing'));
+        return;
+    }
+
+    this.list( deployment_id, node_id, _include, function( err, response, body ){
+            if ( !!body && body.length > 0 ){
+                body = body[0];
+            }
+            callback(err, response, body);
+        }
+    );
+};
+
+module.exports = NodesClient;
+
+},{"log4js":15}],28:[function(require,module,exports){
+'use strict';
+
+var logger = require('log4js').getLogger('cloudify.nodeInstances');
+
+/**
+ * @description
+ * collection of API calls for searching
+ * @class SearchClient
+ * @param {ClientConfig} config
+ * @constructor
+ */
+function SearchClient( config ){
+    this.config = config;
+}
+
+/**
+ * @description run the provided elasticsearch query
+ * @param {string} query elasticsearch query
+ * @param {ApiCallback} callback body gets result hits
+ */
+SearchClient.prototype.run_query = function( query, callback ){
+    logger.trace('running query');
+    this.config.request(
+        {
+            'method' : 'POST',
+            'url' : '/search',
+            'body' : query
+        },
+        callback
+    );
+};
+
+module.exports = SearchClient;
+
+},{"log4js":15}]},{},[18]);
