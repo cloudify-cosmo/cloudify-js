@@ -20,6 +20,7 @@
 /**
  * @typedef {object}  ClientConfig
  * @property {string} endpoint the cloudify rest api endpoint. (e.g. http://manager-host-ip)
+ * @property {object} authHeaders - header  as map of {key,value} for authentication implementation with cloudify. This object will be merged with request opts when a request is generated. they will override if key exists.
  * @property {object} [request] a request implementation. {@see https://www.npmjs.com/package/browser-request} . {@see https://www.npmjs.com/package/request}
  * frontend implementations will pass the browser version, and nodejs version should pass the node version.
  *
@@ -45,6 +46,14 @@ var Evaluate = require('./evaluate');
  * @constructor
  */
 function Client( config ){
+
+    // add security support. currently basic username/password support
+    var origRequest = config.request;
+
+    config.request = function( opts, callback ){
+        opts.auth = config.cloudifyAuth;
+        origRequest(opts, callback);
+    };
 
     this.blueprints = new Blueprints( config );
     this.events = new Events( config );
