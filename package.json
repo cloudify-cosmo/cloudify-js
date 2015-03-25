@@ -1,38 +1,39 @@
 {
-  "name": "cloudify-js",
-  "version": "0.0.0",
-  "description": "javascript client for cloudify-cosmo REST API",
-  "dependencies": {
-    "grunt": "~0.4.5",
-    "grunt-banner": "~0.3.1",
-    "grunt-browserify": "~3.3.0",
-    "grunt-contrib-jshint": "~0.11.0",
-    "jshint-stylish": "~1.0.0",
-    "log4js": "~0.6.22",
-    "browser-request": "~0.3.3"
-  },
-  "devDependencies": {
-    "grunt": "~0.4.5",
-    "jshint-stylish": "~1.0.0",
-    "grunt-contrib-jshint": "~0.11.0",
-    "grunt-banner": "~0.3.1",
-    "load-grunt-tasks": "~3.0.0",
-    "grunt-contrib-uglify": "~0.7.0",
-    "grunt-contrib-connect": "~0.9.0"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/cloudify-cosmo/cloudify-js.git"
-  },
-  "keywords": [
-    "cloudify"
-  ],
-  "author": "",
-  "license": "apache",
-  "bugs": {
-    "url": "https://github.com/cloudify-cosmo/cloudify-js/issues"
-  }
+    "name": "cloudify-js",
+    "version": "0.0.0",
+    "description": "javascript client for cloudify-cosmo REST API",
+    "main" : "src/cloudify.js",
+    "dependencies": {
+        "log4js": "~0.6.22",
+        "browser-request": "~0.3.3"
+    },
+    "devDependencies": {
+        "grunt": "~0.4.5",
+        "grunt-banner": "~0.3.1",
+        "grunt-browserify": "~3.3.0",
+        "grunt-contrib-jshint": "~0.11.0",
+        "jshint-stylish": "~1.0.0",
+        "grunt": "~0.4.5",
+        "jshint-stylish": "~1.0.0",
+        "grunt-contrib-jshint": "~0.11.0",
+        "grunt-banner": "~0.3.1",
+        "load-grunt-tasks": "~3.0.0",
+        "grunt-contrib-uglify": "~0.7.0",
+        "grunt-contrib-connect": "~0.9.0"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cloudify-cosmo/cloudify-js.git"
+    },
+    "keywords": [
+        "cloudify"
+    ],
+    "author": "",
+    "license": "apache",
+    "bugs": {
+        "url": "https://github.com/cloudify-cosmo/cloudify-js/issues"
+    }
 }
