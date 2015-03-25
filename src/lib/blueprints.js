@@ -126,5 +126,19 @@ BlueprintsClient.prototype.download = function( blueprint_id, output_file, callb
     throw new Error('this function is not implemented');
 };
 
+/**
+ *
+ * @description
+ * browse a previously downloaded blueprint.
+ *
+ * @param {string} blueprint_id
+ * @param {number} last_update
+ * @param {ApiCallback} callback body gets the content of blueprint files tree
+ */
+BlueprintsClient.prototype.browse = function (blueprint_id, last_update, _include, callback) {
+    logger.trace('browse blueprint');
+    throw new Error('this function is not implemented');
+};
+
 
 module.exports = BlueprintsClient;
