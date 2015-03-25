@@ -284,6 +284,29 @@ DeploymentsClient.prototype.delete = function( deployment_id, ignore_live_nodes,
     );
 };
 
+/**
+ * @description
+ * returns a deployment workflows by deployment id
+ * @param {string} deployment_id id of the deployment to get its workflows
+ * @param {IncludeParam} [_include] list of fields to include in response
+ * @param {ApiCallback} callback body gets workflows
+ */
+DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, callback ){
+    logger.trace('getting workflows');
+    if ( !deployment_id ){
+        callback(new Error('blueprint_id is missing'));
+        return;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : String.format( this.config.endpoint  + '/deployments/{0}/workflows', deployment_id )
+        },
+        callback
+    );
+};
+
 
 
 
