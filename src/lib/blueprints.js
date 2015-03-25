@@ -59,6 +59,27 @@ BlueprintsClient.prototype.get = function (blueprint_id, _include, callback) {
 };
 
 /**
+ * @description
+ * Gets  a bluprint by its id.
+ * @param {string} blueprint_id Blueprint's id to validate
+ * @param {IncludeParam} [_include] List of fields to include in response
+ * @param {ApiCallback} callback body gets the blueprint validation result
+ */
+BlueprintsClient.prototype.validate = function (blueprint_id, _include, callback) {
+    logger.trace('validating blueprint by id');
+    var qs = {};
+    if (!!_include) {
+        qs._include = _include;
+    }
+
+    return this.config.request({
+        'method': 'GET',
+        'url': String.format(this.config.endpoint + '/blueprints/{0}/validate', blueprint_id ),
+        'qs': qs
+    }, callback );
+};
+
+/**
  * @description Deltes the blueprint whose id matches the provided blueprint id.
  * @param {string} blueprint_id the id of the blueprint to be deleted
  * @param {ApiCallback} callback body gets the deleted blueprint
