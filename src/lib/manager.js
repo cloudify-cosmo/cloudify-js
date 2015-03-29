@@ -40,7 +40,7 @@ ManagerClient.prototype.get_version = function( callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/version'
+            'url' : this.config.endpoint + '/version'
         },
         callback
     );
@@ -63,7 +63,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/provider/context',
+            'url' : this.config.endpoint +  '/provider/context',
             'qs': qs
         },
         callback
@@ -97,7 +97,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
     this.config.request(
         {
             'method' : 'POST',
-            'url' : '/provider/context',
+            'url' : this.config.endpoint + '/provider/context',
             body: body
         },
         callback // expected status code 201

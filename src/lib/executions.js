@@ -48,7 +48,7 @@ ExecutionsClient.prototype.list = function( deployment_id, _include, callback  )
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/executions',
+            'url' : this.config.endpoint + '/executions',
             qs:qs
         },
         callback
@@ -202,7 +202,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
     this.config.request(
         {
             'method' : 'POST',
-            'url' : '/executions/{0}',
+            'url' : this.config.endpoint + '/executions/{0}',
             'json' : true,
             'body' : body
         },
