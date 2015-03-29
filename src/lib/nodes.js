@@ -38,7 +38,7 @@ function NodesClient( config ){
  * @param {IncludeParam|null} [_include=null] list of fields to include in response
  * @param {ApiCallback} callback body gets list of nodes
  */
-NodesClient.prototype.list = function( deployment_id, node_id, _include , callback ){
+NodesClient.prototype.list = function( deployment_id, _include , callback ){
     logger.trace('listing nodes');
     var qs = {};
 

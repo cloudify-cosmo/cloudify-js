@@ -107,16 +107,12 @@ NodeInstancesClient.prototype.update = function( node_instance_id, state, runtim
  * @param {IncludeParam|null} [_include=null] list of fields to include in response
  * @param {ApiCallback} callback body gets list of node instances
  */
-NodeInstancesClient.prototype.list = function( deployment_id, node_name, _include , callback ){
+NodeInstancesClient.prototype.list = function( deployment_id, _include , callback ){
     logger.trace('listing node instances');
     var qs = {};
 
     if ( deployment_id ){
         qs.deployment_id = deployment_id;
-    }
-
-    if ( node_name ){
-        qs.node_name = node_name;
     }
 
     if (_include){
