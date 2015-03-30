@@ -191,7 +191,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
         return;
     }
 
-    var body = {};
+    var body = {  };
 
     if ( force === true ){
         body.action = 'force-cancel';
@@ -202,7 +202,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
     this.config.request(
         {
             'method' : 'POST',
-            'url' : this.config.endpoint + '/executions/{0}',
+            'url' : String.format(this.config.endpoint + '/executions/{0}', execution_id),
             'json' : true,
             'body' : body
         },
