@@ -48,6 +48,7 @@ EventsClient._create_events_query = function (execution_id, include_logs) {
  */
 EventsClient.prototype.get = function( execution_id, from_event, batch_size, include_logs , callback ){
     logger.trace('getting events');
+
     var qs = {
         'sort' : [ {'@timestamp' : { 'order' : 'asc'} } ],
         'query' : EventsClient._create_events_query( execution_id, include_logs )
@@ -65,19 +66,34 @@ EventsClient.prototype.get = function( execution_id, from_event, batch_size, inc
         qs.size = 100;
     }
 
+    this.query( qs , callback );
+};
+
+/**
+ * @description
+ * same as get, but only gets a query object instead of constructing the query himself.
+ *
+ */
+EventsClient.prototype.query = function( query , callback ){
+    logger.trace('getting events');
+
     this.config.request(
         {
-            'method' : 'GET',
-            'url' : this.config.endpoint + '/events'
+            'method' : 'POST',
+            'url' : this.config.endpoint + '/events',
+            'json':true,
+            'body': query
 
         },
         function( err, response, body ){
-            var myBody = {};
-            if ( !!body ){
-                myBody.total_events = response.hits.total;
-                myBody._source = response.hits.hits;
+
+            if ( !!response && !!response.body ){
+                response.body = {
+                    'total_events' :  response.body.hits.total,
+                    'events' : response.body.hits.hits
+                };
             }
-            callback(err, response, body);
+            callback(err, response, response.body);
         } );
 };
 
