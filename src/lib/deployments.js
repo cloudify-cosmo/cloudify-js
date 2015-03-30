@@ -235,7 +235,7 @@ DeploymentsClient.prototype.create = function( blueprint_id, deployment_id, inpu
         'blueprint_id': blueprint_id
     };
 
-    if ( !inputs ){
+    if ( inputs ){
         body.inputs = inputs;
     }
 
