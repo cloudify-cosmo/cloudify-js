@@ -35,7 +35,7 @@ EvaluateClient.prototype.functions = function( deployment_id, context, payload, 
     this.config.request(
         {
             'method' : 'POST',
-            'url' : '/evaluate/functions',
+            'url' : this.config.endpoint + '/evaluate/functions',
             'json' : true,
             'body' : {
                 'deployment_id' : deployment_id,

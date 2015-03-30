@@ -53,7 +53,7 @@ NodesClient.prototype.list = function( deployment_id, _include , callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/nodes',
+            'url' : this.config.endpoint + '/nodes',
             qs: qs
         },
         callback
