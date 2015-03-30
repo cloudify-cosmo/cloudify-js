@@ -4063,6 +4063,27 @@ BlueprintsClient.prototype.get = function (blueprint_id, _include, callback) {
 };
 
 /**
+ * @description
+ * Gets  a bluprint by its id.
+ * @param {string} blueprint_id Blueprint's id to validate
+ * @param {IncludeParam} [_include] List of fields to include in response
+ * @param {ApiCallback} callback body gets the blueprint validation result
+ */
+BlueprintsClient.prototype.validate = function (blueprint_id, _include, callback) {
+    logger.trace('validating blueprint by id');
+    var qs = {};
+    if (!!_include) {
+        qs._include = _include;
+    }
+
+    return this.config.request({
+        'method': 'GET',
+        'url': String.format(this.config.endpoint + '/blueprints/{0}/validate', blueprint_id ),
+        'qs': qs
+    }, callback );
+};
+
+/**
  * @description Deltes the blueprint whose id matches the provided blueprint id.
  * @param {string} blueprint_id the id of the blueprint to be deleted
  * @param {ApiCallback} callback body gets the deleted blueprint
@@ -4106,6 +4127,34 @@ BlueprintsClient.prototype.upload = function( blueprint_path , blueprint_id, cal
  */
 BlueprintsClient.prototype.download = function( blueprint_id, output_file, callback  ){
     logger.trace('downloading blueprint');
+    throw new Error('this function is not implemented');
+};
+
+/**
+ *
+ * @description
+ * browse a previously downloaded blueprint.
+ *
+ * @param {string} blueprint_id
+ * @param {number} last_update
+ * @param {ApiCallback} callback body gets the content of blueprint files tree
+ */
+BlueprintsClient.prototype.browse = function (blueprint_id, last_update, _include, callback) {
+    logger.trace('browse blueprint');
+    throw new Error('this function is not implemented');
+};
+
+/**
+ *
+ * @description
+ * browse a specific file content from a downloaded blueprint.
+ *
+ * @param {string} blueprint_id
+ * @param {string} file_path
+ * @param {ApiCallback} callback body gets the content of blueprint files tree
+ */
+BlueprintsClient.prototype.browseFile = function (blueprint_id, file_path, _include, callback) {
+    logger.trace('browse blueprint');
     throw new Error('this function is not implemented');
 };
 
@@ -4491,6 +4540,29 @@ DeploymentsClient.prototype.delete = function( deployment_id, ignore_live_nodes,
     );
 };
 
+/**
+ * @description
+ * returns a deployment workflows by deployment id
+ * @param {string} deployment_id id of the deployment to get its workflows
+ * @param {IncludeParam} [_include] list of fields to include in response
+ * @param {ApiCallback} callback body gets workflows
+ */
+DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, callback ){
+    logger.trace('getting workflows');
+    if ( !deployment_id ){
+        callback(new Error('blueprint_id is missing'));
+        return;
+    }
+
+    this.config.request(
+        {
+            'method' : 'GET',
+            'url' : String.format( this.config.endpoint  + '/deployments/{0}/workflows', deployment_id )
+        },
+        callback
+    );
+};
+
 
 
 
@@ -4533,7 +4605,7 @@ EvaluateClient.prototype.functions = function( deployment_id, context, payload, 
     this.config.request(
         {
             'method' : 'POST',
-            'url' : '/evaluate/functions',
+            'url' : this.config.endpoint + '/evaluate/functions',
             'json' : true,
             'body' : {
                 'deployment_id' : deployment_id,
@@ -4685,7 +4757,7 @@ ExecutionsClient.prototype.list = function( deployment_id, _include, callback  )
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/executions',
+            'url' : this.config.endpoint + '/executions',
             qs:qs
         },
         callback
@@ -4839,7 +4911,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
     this.config.request(
         {
             'method' : 'POST',
-            'url' : '/executions/{0}',
+            'url' : this.config.endpoint + '/executions/{0}',
             'json' : true,
             'body' : body
         },
@@ -4892,7 +4964,7 @@ ManagerClient.prototype.get_version = function( callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/version'
+            'url' : this.config.endpoint + '/version'
         },
         callback
     );
@@ -4915,7 +4987,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/provider/context',
+            'url' : this.config.endpoint +  '/provider/context',
             'qs': qs
         },
         callback
@@ -4949,7 +5021,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
     this.config.request(
         {
             'method' : 'POST',
-            'url' : '/provider/context',
+            'url' : this.config.endpoint + '/provider/context',
             body: body
         },
         callback // expected status code 201
@@ -5068,16 +5140,12 @@ NodeInstancesClient.prototype.update = function( node_instance_id, state, runtim
  * @param {IncludeParam|null} [_include=null] list of fields to include in response
  * @param {ApiCallback} callback body gets list of node instances
  */
-NodeInstancesClient.prototype.list = function( deployment_id, node_name, _include , callback ){
+NodeInstancesClient.prototype.list = function( deployment_id, _include , callback ){
     logger.trace('listing node instances');
     var qs = {};
 
     if ( deployment_id ){
         qs.deployment_id = deployment_id;
-    }
-
-    if ( node_name ){
-        qs.node_name = node_name;
     }
 
     if (_include){
@@ -5152,7 +5220,7 @@ NodesClient.prototype.list = function( deployment_id, node_id, _include , callba
     this.config.request(
         {
             'method' : 'GET',
-            'url' : '/nodes',
+            'url' : this.config.endpoint + '/nodes',
             qs: qs
         },
         callback
@@ -5216,7 +5284,7 @@ SearchClient.prototype.run_query = function( query, callback ){
     this.config.request(
         {
             'method' : 'POST',
-            'url' : '/search',
+            'url' : this.config.endpoint + '/search',
             'body' : query
         },
         callback
