@@ -154,9 +154,9 @@ ExecutionsClient.prototype.start = function( deployment_id, workflow_id, paramet
     }
 
     if ( allow_custom_parameters === true ){
-        body.parameters = 'true';
+        body.allow_custom_parameters = 'true';
     }else{
-        body.parameters = 'false';
+        body.allow_custom_parameters = 'false';
     }
 
     if ( force === true ){
