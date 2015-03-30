@@ -4494,7 +4494,7 @@ DeploymentsClient.prototype.create = function( blueprint_id, deployment_id, inpu
         'blueprint_id': blueprint_id
     };
 
-    if ( !inputs ){
+    if ( inputs ){
         body.inputs = inputs;
     }
 
@@ -4673,6 +4673,7 @@ EventsClient._create_events_query = function (execution_id, include_logs) {
  */
 EventsClient.prototype.get = function( execution_id, from_event, batch_size, include_logs , callback ){
     logger.trace('getting events');
+
     var qs = {
         'sort' : [ {'@timestamp' : { 'order' : 'asc'} } ],
         'query' : EventsClient._create_events_query( execution_id, include_logs )
@@ -4690,19 +4691,34 @@ EventsClient.prototype.get = function( execution_id, from_event, batch_size, inc
         qs.size = 100;
     }
 
+    this.query( qs , callback );
+};
+
+/**
+ * @description
+ * same as get, but only gets a query object instead of constructing the query himself.
+ *
+ */
+EventsClient.prototype.query = function( query , callback ){
+    logger.trace('getting events');
+
     this.config.request(
         {
-            'method' : 'GET',
-            'url' : this.config.endpoint + '/events'
+            'method' : 'POST',
+            'url' : this.config.endpoint + '/events',
+            'json':true,
+            'body': query
 
         },
-        function( err, response, body ){
-            var myBody = {};
-            if ( !!body ){
-                myBody.total_events = response.hits.total;
-                myBody._source = response.hits.hits;
+        function( err, response/*, body*/ ){
+
+            if ( !!response && !!response.body ){
+                response.body = {
+                    'total_events' :  response.body.hits.total,
+                    'events' : response.body.hits.hits
+                };
             }
-            callback(err, response, body);
+            callback(err, response, response.body);
         } );
 };
 
@@ -4866,9 +4882,9 @@ ExecutionsClient.prototype.start = function( deployment_id, workflow_id, paramet
     }
 
     if ( allow_custom_parameters === true ){
-        body.parameters = 'true';
+        body.allow_custom_parameters = 'true';
     }else{
-        body.parameters = 'false';
+        body.allow_custom_parameters = 'false';
     }
 
     if ( force === true ){
@@ -4903,7 +4919,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
         return;
     }
 
-    var body = {};
+    var body = {  };
 
     if ( force === true ){
         body.action = 'force-cancel';
@@ -4914,7 +4930,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
     this.config.request(
         {
             'method' : 'POST',
-            'url' : this.config.endpoint + '/executions/{0}',
+            'url' : String.format(this.config.endpoint + '/executions/{0}', execution_id),
             'json' : true,
             'body' : body
         },

@@ -85,7 +85,7 @@ EventsClient.prototype.query = function( query , callback ){
             'body': query
 
         },
-        function( err, response, body ){
+        function( err, response/*, body*/ ){
 
             if ( !!response && !!response.body ){
                 response.body = {
