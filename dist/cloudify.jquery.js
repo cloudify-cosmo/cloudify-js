@@ -4088,7 +4088,7 @@ BlueprintsClient.prototype.validate = function (blueprint_id, _include, callback
  * @param {string} blueprint_id the id of the blueprint to be deleted
  * @param {ApiCallback} callback body gets the deleted blueprint
  */
-BlueprintsClient.prototype.delete = function(blueprint_id, callback ){
+BlueprintsClient.prototype.delete = function(blueprint_id, _include, callback ){
     logger.trace('deleting blueprint');
     return this.config.request({
         'method' : 'DELETE',
@@ -4415,6 +4415,7 @@ DeploymentModificationClient.prototype.finish = function( deployment_id, modific
 
 function DeploymentsClient( config ){
     this.config = config;
+    this.outputs = new DeploymentOutputsClient( config );
 }
 
 /**
