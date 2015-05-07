@@ -1,6 +1,6 @@
 'use strict';
 
-var request =require('request');
+var request = require('request');
 
 var Client = require('./lib/client');
 

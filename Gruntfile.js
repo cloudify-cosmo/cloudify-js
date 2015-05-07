@@ -21,7 +21,17 @@ module.exports = function (grunt) {
                 options: {
                     jshintrc: 'src/.jshintrc'
                 },
-                src: [ 'src/**/*.js', 'Gruntfile.js']
+                src: ['src/**/*.js', 'Gruntfile.js']
+            },
+            backendJasmineTest: {
+                options: {
+                    jshintrc: 'test/backend/.jshintrc'
+                },
+                files: {
+                    src: [
+                        'test/backend/**/*.js'
+                    ]
+                }
             }
         },
         uglify: {
@@ -41,7 +51,7 @@ module.exports = function (grunt) {
                 }
             }
         },
-        browserify:{
+        browserify: {
             options: {
                 banner: bannerTxt
             },
@@ -52,12 +62,12 @@ module.exports = function (grunt) {
             },
             jquery_client: {
                 files: {
-                    '<%= distDir %>/cloudify.jquery.js' : ['src/cloudify.jquery.js']
+                    '<%= distDir %>/cloudify.jquery.js': ['src/cloudify.jquery.js']
                 }
             },
             vanilla_client: {
                 files: {
-                    '<%= distDir %>/cloudify.vanilla.js' : ['src/cloudify.vanilla.js' ]
+                    '<%= distDir %>/cloudify.vanilla.js': ['src/cloudify.vanilla.js']
                 }
             }
         },
@@ -74,20 +84,31 @@ module.exports = function (grunt) {
                     }
                 }
             }
+        },
+        karma: {
+            debug: {
+                configFile: 'karma.conf.js',
+                singleRun:false
+            },
+            unit: {
+                configFile: 'karma.conf.js',
+                singleRun: true
+            }
         }
     });
 
 
     grunt.registerTask('test', [
-
+        'jshint',
+        'browserify',
+        'karma'
     ]);
 
-    grunt.registerTask('build',[
+    grunt.registerTask('build', [
         'jshint',
         'browserify',
         'uglify'
     ]);
-
 
 
     grunt.registerTask('default', [
