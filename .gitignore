@@ -29,3 +29,5 @@ node_modules
 dev
 doc
 .idea
+3rd-parties
+results.txt

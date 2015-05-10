@@ -7,16 +7,21 @@ module.exports = function(config) {
         frameworks: ['browserify', 'jasmine'],
 
         files: [
-            'dist/cloudify.vanilla.js',
-            'test/**/*.spec.js'
+            '3rd-parties/angularjs/angular.js',
+            '3rd-parties/angular-mocks/angular-mocks.js',
+            //'3rd-parties/angular-sanitize/angular-sanitize.js',
+            //'3rd-parties/angular-resource/angular-resource.js',
+            'node_modules/expect.js/index.js',
+            'dist/cloudify.angular.js',
+            'test/backend/client.angular.spec.js'
 
         ],
 
         exclude: [],
 
-        //preprocessors: {
-        //    'test/**/*.spec.js': ['browserify']
-        //},
+        preprocessors: {
+            'test/backend/client.angular.spec.js': ['browserify']
+        },
 
         reporters: ['progress'],
 

@@ -85,13 +85,37 @@ module.exports = function (grunt) {
                 }
             }
         },
+        // Configure a mochaTest task
+        mochaTest: {
+            test: {
+                options: {
+                    reporter: 'spec',
+                    captureFile: 'results.txt', // Optionally capture the reporter output to a file
+                    quiet: false, // Optionally suppress output to standard out (defaults to false)
+                    clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false)
+                },
+                src: ['test/backend/client.node.spec.js']
+            }
+        },
         karma: {
             debug: {
-                configFile: 'karma.conf.js',
+                configFile: 'karma.vanilla.conf.js',
                 singleRun:false
             },
             unit: {
-                configFile: 'karma.conf.js',
+                configFile: 'karma.vanilla.conf.js',
+                singleRun: true
+            },
+            vanilla: {
+                configFile: 'karma.vanilla.conf.js',
+                singleRun: true
+            },
+            jquery: {
+                configFile: 'karma.jquery.conf.js',
+                singleRun: true
+            },
+            angular: {
+                configFile: 'karma.angular.conf.js',
                 singleRun: true
             }
         }
@@ -101,7 +125,7 @@ module.exports = function (grunt) {
     grunt.registerTask('test', [
         'jshint',
         'browserify',
-        'karma'
+        'karma:jquery'
     ]);
 
     grunt.registerTask('build', [
@@ -113,7 +137,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', [
         'jshint',
-        'test',
+        //'test',
         'build'
     ]);
 };
