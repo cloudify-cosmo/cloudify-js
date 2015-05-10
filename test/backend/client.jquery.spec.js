@@ -6,4 +6,4 @@ describe('jquery client', function(){
     });
 });
 
-require('./client_test.js');
+require('./clientTests');

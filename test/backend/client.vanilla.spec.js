@@ -6,4 +6,4 @@ describe('vanilla client', function(){
     });
 });
 
-require('./client_test.js');
+require('./clientTests');
