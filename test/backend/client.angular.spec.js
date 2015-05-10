@@ -8,4 +8,5 @@ describe('angular client', function(){
     }));
 });
 
+require('./client_instantiator');
 require('./clientTests');
