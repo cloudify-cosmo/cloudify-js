@@ -9,3 +9,5 @@
  *********************************************************/
 
 exports.blueprints = require('./blueprints.js');
+exports.deployments = require('./deployments.js');
+exports.testFlows = require('./testFlows.js');

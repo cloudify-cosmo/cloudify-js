@@ -1,0 +1,3 @@
+Tests make several assumptions
+1. manager loads with a blueprint named HelloWorld, based on testHelloWorld.tar.gz in resources folder
+2. manager loads with a deployment named HelloWorld, based on HelloWorld blueprint (see 1).
