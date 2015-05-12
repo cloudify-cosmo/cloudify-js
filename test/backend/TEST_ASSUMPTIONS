@@ -1,3 +1,5 @@
 Tests make several assumptions
-1. manager loads with a blueprint named HelloWorld, based on testHelloWorld.tar.gz in resources folder
-2. manager loads with a deployment named HelloWorld, based on HelloWorld blueprint (see 1).
+1. blueprint named HelloWorld, based on testHelloWorld.tar.gz in resources folder
+2. deployment named HelloWorld, based on HelloWorld blueprint (see 1).
+3. blueprint named nodecellar, based on cloudify-nodecellar-example.tar.gz in resources folder
+4. deployment named nodecellar, based on nodecellar blueprint (see 3).

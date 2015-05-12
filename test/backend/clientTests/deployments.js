@@ -1,7 +1,6 @@
 'use strict';
 
 describe('deployments:', function () {
-    var depName = 'HelloWorld-' + Date.now();
 
     it('should create a deployment', function (done) {
         testClient.deployments.create('HelloWorld', depName, null, function (err, response, body) {
@@ -32,24 +31,9 @@ describe('deployments:', function () {
         });
     });
 
-    it('should get deployment workflows', function (done) {
-        testClient.deployments.get_workflows('HelloWorld', null, function (err, response, body) {
-            expect(body).to.be.ok();
-            expect(response.statusCode).to.be(200);
-            //console.log('response:' + JSON.stringify(response));
-            //console.log('body:' + body);
-            var workflows = JSON.parse(body);
-            expect(workflows).to.be.ok();
-
-            done();
-
-        });
-    });
-
     it('should delete a deployment', function (done) {
         testClient.deployments.delete(depName, true, function (err, response, body) {
             expect(body).to.be.ok();
-            expect(response.statusCode).to.be(200);
 
             var bodyObj = JSON.parse(body);
 

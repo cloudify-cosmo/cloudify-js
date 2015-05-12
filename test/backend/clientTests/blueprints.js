@@ -30,12 +30,4 @@ describe('blueprints:', function(){
         });
     });
 
-    xit('should validate blueprint', function(done) {
-        testClient.blueprints.validate('HelloWorld', null, function(err, response, body) {
-            expect(body).to.be.ok();
-            expect(response.statusCode).to.be(200);
-
-            done();
-        });
-    });
 });
