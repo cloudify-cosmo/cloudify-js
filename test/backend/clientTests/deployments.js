@@ -4,6 +4,8 @@ describe('deployments:', function () {
 
     it('should create a deployment', function (done) {
         testClient.deployments.create('HelloWorld', depName, null, function (err, response, body) {
+            expect(body).to.be.ok();
+            expect(response.statusCode).to.be(201);
 
             testClient.deployments.get(depName, null, function (err, response, body) {
                 expect(body).to.be.ok();
