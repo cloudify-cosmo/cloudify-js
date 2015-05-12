@@ -11,4 +11,5 @@
 exports.blueprints = require('./blueprints.js');
 exports.deployments = require('./deployments.js');
 exports.executions = require('./executions.js');
+exports.events = require('./events.js');
 exports.testFlows = require('./testFlows.js');
