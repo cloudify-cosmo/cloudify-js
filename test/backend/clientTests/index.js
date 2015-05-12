@@ -14,4 +14,5 @@ exports.executions = require('./executions.js');
 exports.events = require('./events.js');
 exports.manager = require('./manager.js');
 exports.nodeInstances = require('./nodeInstances.js');
+exports.nodes = require('./nodes.js');
 exports.testFlows = require('./testFlows.js');
