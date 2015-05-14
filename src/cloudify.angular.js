@@ -14,7 +14,7 @@ var logger = log4js.getLogger('cloudify.angular');
 
 angular.module('cloudifyjs', []);
 
-angular.module('cloudifyjs').factory('CloudifyClient', function( $rootScope ){
+angular.module('cloudifyjs').factory('CloudifyClient', function( $timeout ){
     /**
      * @param {ClientConfig} config
      */
@@ -34,9 +34,9 @@ angular.module('cloudifyjs').factory('CloudifyClient', function( $rootScope ){
                     origArguments[origArguments.length-1] = function(){
                         var wrapperArguments = arguments;
                         //console.log('wrapper callback invoked', arguments );
-                        $rootScope.$apply(function(){
+                        $timeout(function(){ // using timeout instead of $rootScope.$apply. avoid `apply in progress` error message. see comments at: http://stackoverflow.com/q/12729122/1068746
                             origCallback.apply(null, wrapperArguments);
-                        });
+                        },0);
 
                     };
                 }

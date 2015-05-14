@@ -16,27 +16,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.js"></script>
 <script src="cloudify.angular.js"></script>
 <script>
-    angular.module('cloudifyjsApp', [ 'cloudifyjs']);
-    angular.module('cloudifyjsApp').controller('cloudifyjsCtrl', function($scope, $log, CloudifyClient ){
+    angular.module('cloudifyjsApp', ['cloudifyjs']);
+    angular.module('cloudifyjsApp').controller('cloudifyjsCtrl', function ($scope, $log, CloudifyClient) {
         $scope.name = 'world';
-        var client = new CloudifyClient( { 'endpoint' : 'http://cloudify.localhost.com' } );
-        client.blueprints.list( null, function(err, response, body ){
-
-            var callback = function(){
+        var client = new CloudifyClient({'endpoint': 'http://cloudify.localhost.com'});
+        client.blueprints.list(null, function (err, response, body) {
+            $scope.$apply(function () { // this is optional. it is here to show we don't break backward compat.
                 $log.info('this is body type:: ', typeof(body));
-                if ( typeof(body) === 'string' ){
+                if (typeof(body) === 'string') {
                     body = JSON.parse(body);
                 }
-
                 $scope.blueprints = body;
-            };
-            if ( !$scope.$$phase ){
-                $scope.$apply(callback);
-            }else{
-                callback();
-            }
-
-
+            });
         });
     });
 </script>
