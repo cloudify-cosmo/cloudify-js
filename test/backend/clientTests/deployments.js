@@ -51,6 +51,6 @@ describe('deployments:', function () {
 
             done();
         });
-    })
+    });
 
 });

@@ -3,7 +3,7 @@
     "browser": true,
     "esnext": true,
     "bitwise": true,
-    "camelcase": true,
+    "camelcase": false,
     "curly": true,
     "eqeqeq": true,
     "immed": true,
@@ -33,7 +33,8 @@
         "testClient" : false,
         "TestClient" : false,
         "expect" : false,
-        "inject" : false
+        "inject" : false,
+        "depName" : false
     }
 }
 
