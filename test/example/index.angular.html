@@ -6,6 +6,11 @@
 
 <div ng-app="cloudifyjsApp" ng-controller="cloudifyjsCtrl">
     <h1>hello {{name}}</h1>
+    <ul>
+        <li ng-repeat="b in blueprints">
+            {{ b.id }}
+        </li>
+    </ul>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.10/angular.js"></script>
@@ -13,9 +18,25 @@
 <script>
     angular.module('cloudifyjsApp', [ 'cloudifyjs']);
     angular.module('cloudifyjsApp').controller('cloudifyjsCtrl', function($scope, $log, CloudifyClient ){
+        $scope.name = 'world';
         var client = new CloudifyClient( { 'endpoint' : 'http://cloudify.localhost.com' } );
         client.blueprints.list( null, function(err, response, body ){
-            $log.info('this is body', body);
+
+            var callback = function(){
+                $log.info('this is body type:: ', typeof(body));
+                if ( typeof(body) === 'string' ){
+                    body = JSON.parse(body);
+                }
+
+                $scope.blueprints = body;
+            };
+            if ( !$scope.$$phase ){
+                $scope.$apply(callback);
+            }else{
+                callback();
+            }
+
+
         });
     });
 </script>

@@ -3991,7 +3991,7 @@ var logger = log4js.getLogger('cloudify.angular');
 
 angular.module('cloudifyjs', []);
 
-angular.module('cloudifyjs').factory('CloudifyClient', function(){
+angular.module('cloudifyjs').factory('CloudifyClient', function( $rootScope ){
     /**
      * @param {ClientConfig} config
      */
@@ -3999,6 +3999,28 @@ angular.module('cloudifyjs').factory('CloudifyClient', function(){
         if ( !config.request){
             config.request = request;
         }
+
+        var origRequest =  config.request;
+        config.request = function(){
+            var origArguments = arguments;
+            if ( origArguments.length > 0){
+                //console.log('checking if last argument is a callback');
+                var origCallback = origArguments[origArguments.length-1];
+                if ( typeof(origCallback) === 'function'){
+                    //console.log('replacing origCallback');
+                    origArguments[origArguments.length-1] = function(){
+                        var wrapperArguments = arguments;
+                        //console.log('wrapper callback invoked', arguments );
+                        $rootScope.$apply(function(){
+                            origCallback.apply(null, wrapperArguments);
+                        });
+
+                    };
+                }
+            }
+            origRequest.apply(null, origArguments );
+        };
+
         return new Client(config);
     };
 });
@@ -4091,7 +4113,7 @@ BlueprintsClient.prototype.validate = function (blueprint_id, _include, callback
  * @param {string} blueprint_id the id of the blueprint to be deleted
  * @param {ApiCallback} callback body gets the deleted blueprint
  */
-BlueprintsClient.prototype.delete = function(blueprint_id, callback ){
+BlueprintsClient.prototype.delete = function(blueprint_id, _include, callback ){
     logger.trace('deleting blueprint');
     return this.config.request({
         'method' : 'DELETE',
