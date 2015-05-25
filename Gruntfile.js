@@ -129,6 +129,12 @@ module.exports = function (grunt) {
         'karma:jquery'
     ]);
 
+    grunt.registerTask('mocha', [
+        'jshint',
+        'browserify',
+        'mochaTest'
+    ]);
+
     grunt.registerTask('build', [
         'jshint',
         'browserify',
