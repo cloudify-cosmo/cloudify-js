@@ -46,4 +46,3 @@ else
 fi
 
 sudo -- sh -c "echo '127.0.0.1 cloudify.localhost.com' >> /etc/hosts"
-cat /etc/hosts

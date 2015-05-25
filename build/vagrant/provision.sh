@@ -11,4 +11,5 @@ export INSTALL_SYSTEM_TESTS_REQ=true
 echo "installing cloudify-installer"
 cloudify-installer run_script -s 3.2.0/vagrant_install_simple/script.sh
 
+./setup_tests_env.sh
 ./run_test.sh
