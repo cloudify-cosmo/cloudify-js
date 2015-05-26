@@ -1,8 +1,9 @@
 'use strict';
 
+
 var logger = require('log4js').getLogger('cloudify.blueprints');
 /**
- * @typedef {object} Blueprint
+ * @typedef {object} BlueprintsClient~Blueprint
  *
  * @property {string} id The identifier of the blueprint
  * @property {number} created_at timestamp of blueprint creation

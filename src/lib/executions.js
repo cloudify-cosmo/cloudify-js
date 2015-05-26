@@ -1,8 +1,9 @@
 'use strict';
 
+
 var logger = require('log4js').getLogger('cloudify.executions');
 /**
- * @typedef {object} Execution
+ * @typedef {object} ExecutionsClient~Execution
  *
  * @property {string} id The execution's id.
  * @property {string} deployment_id the deployment's id this execution is related to.
@@ -126,7 +127,7 @@ ExecutionsClient.prototype.update = function( execution_id, status, error, callb
  *
  * @param {string} deployment_id the deployment's id to execute a workflow for.
  * @param {string} workflow_id the workflow to be executed id.
- * @param {???|null} [parameters] parameters for the workflow execution.
+ * @param {object|null} [parameters] parameters for the workflow execution.
  * @param {boolean|null} [allow_custom_parameters=false] determines whether to allow parameters which weren't defined in
  * the workflow parameters schema in the blueprint.
  * @param {boolean|null} [force=false] determines whether to force the execution of the workflow in a case where there's

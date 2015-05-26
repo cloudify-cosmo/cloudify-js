@@ -2,8 +2,9 @@
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
 
+
 /**
- * @typedef EvaluatedFunc
+ * @typedef {object} EvaluateClient~EvaluatedFunc
  * @property {string} deployment_id
  * @property {object} payload
  */

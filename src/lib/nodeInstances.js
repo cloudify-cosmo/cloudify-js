@@ -3,13 +3,13 @@
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
 
 /**
- * @typedef {object} NodeInstance
+ * @typedef {object} NodeInstancesClient~NodeInstance
  * @property {string} id the identifier of the node instance
  * @property {string} node_id the identifier of the node whom this is the instance of.
- * @property {???} relationships the node instance relationships
+ * @property {object} relationships the node instance relationships
  * @property {string} host_id the node instance host_id
  * @property {string} deployment_id the deployment id the node instance belongs to
- * @property {???} runtime_properties the runtime properties of the node instance
+ * @property {object} runtime_properties the runtime properties of the node instance
  * @property {string} state the current state of the node instance
  * @property {number} version the current version of the node instance - used for optimistic locking on update)
  */
@@ -61,7 +61,7 @@ NodeInstancesClient.prototype.get = function( node_instance_id, _include, callba
  *
  * @param {string} node_instance_id the identifier of the node instance to update
  * @param {string|null} [state] the updated state
- * @param {???|null} [runtime_properties=null] the updated runtime properties
+ * @param {object|null} [runtime_properties=null] the updated runtime properties
  * @param {number} [version=0] current version value of this node instance in cloudify's storage (used for optimistic locking)
  * @param {ApiCallback} callback body gets the updated node instance
  */
