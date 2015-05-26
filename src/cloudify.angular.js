@@ -14,7 +14,7 @@ var logger = log4js.getLogger('cloudify.angular');
 
 angular.module('cloudifyjs', []);
 
-angular.module('cloudifyjs').factory('CloudifyClient', function( $timeout ){
+angular.module('cloudifyjs').factory('CloudifyClient', [ '$timeout',function( $timeout ){
     /**
      * @param {ClientConfig} config
      */
@@ -46,6 +46,6 @@ angular.module('cloudifyjs').factory('CloudifyClient', function( $timeout ){
 
         return new Client(config);
     };
-});
+}]);
 
 logger.trace('cloudifyjs is ready for use.');

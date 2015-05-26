@@ -3991,7 +3991,7 @@ var logger = log4js.getLogger('cloudify.angular');
 
 angular.module('cloudifyjs', []);
 
-angular.module('cloudifyjs').factory('CloudifyClient', function( $timeout ){
+angular.module('cloudifyjs').factory('CloudifyClient', [ '$timeout',function( $timeout ){
     /**
      * @param {ClientConfig} config
      */
@@ -4023,7 +4023,7 @@ angular.module('cloudifyjs').factory('CloudifyClient', function( $timeout ){
 
         return new Client(config);
     };
-});
+}]);
 
 logger.trace('cloudifyjs is ready for use.');
 },{"./lib/client":20,"browser-request":1,"log4js":15}],19:[function(require,module,exports){
