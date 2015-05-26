@@ -10,6 +10,7 @@ npm install
 export PROTRACTOR_BASE_URL=http://localhost
 
 echo "uploading blueprints and creating deployments for cloudify-js tests"
+echo "virtual env folder is: [$SYSTEM_TESTS_VIRTUAL_ENV]"
 source $SYSTEM_TESTS_VIRTUAL_ENV/bin/activate
 cfy blueprints publish-archive -l test/resources/testHelloWorld.tar.gz -b HelloWorld -n blueprint.yaml
 cfy blueprints publish-archive -l test/resources/cloudify-nodecellar-example.tar.gz -b nodecellar -n openstack-blueprint.yaml
