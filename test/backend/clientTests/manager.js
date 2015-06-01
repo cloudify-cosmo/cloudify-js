@@ -6,7 +6,7 @@ describe('manager:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var manager = JSON.parse(body);
+            var manager = body;
             expect(manager.status).to.be('running');
 
             done();

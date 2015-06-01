@@ -48,6 +48,7 @@ NodeInstancesClient.prototype.get = function( node_instance_id, _include, callba
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint + '/node-instances/{0}', node_instance_id),
             'qs': qs
         },
@@ -122,6 +123,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/node-instances',
             'qs' : qs
         },

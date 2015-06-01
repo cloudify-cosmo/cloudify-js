@@ -8,7 +8,7 @@ describe('nodeInstances:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            instances = JSON.parse(body);
+            instances = body;
             expect(instances).to.not.be.empty();
             done();
 
@@ -20,7 +20,7 @@ describe('nodeInstances:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var instance = JSON.parse(body);
+            var instance = body;
             expect(instance.id).to.be(instances[0].id);
 
             done();

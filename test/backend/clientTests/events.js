@@ -6,7 +6,7 @@ describe('events:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var executions = JSON.parse(body);
+            var executions = body;
             expect(executions).to.not.be.empty();
 
             testClient.events.get(executions[0].id, 0, 100, false, function(err, response, body) {
