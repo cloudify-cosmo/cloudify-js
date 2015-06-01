@@ -1,5 +1,21 @@
 'use strict';
 
+var conf = require('../../conf/dev/meConf.json');
+
+/**
+ * conf/dev/meConf.json holds the connection configuration:
+ *
+ * {
+        "endpoint": "http://cloudify.localhost.com",
+        "cloudifyAuth": {
+            "user": "__user__",
+            "pass": "__pass__"
+        }
+    }
+ *
+ */
+
+
 /**
  * This sets up the testClient and lodash.
  *
@@ -10,11 +26,11 @@
  *      require('../client_instantiator');
  */
 if (typeof(window) !== 'undefined') {
-    window.testClient = new TestClient({endpoint: 'http://cloudify.localhost.com'});
+    window.testClient = new TestClient(conf);
     window._ = require('lodash');
     window.depName = 'HelloWorld-' + Date.now();
 } else if (!!global) {
-    global.testClient = new TestClient({endpoint: 'http://cloudify.localhost.com'});
+    global.testClient = new TestClient(conf);
     global._ = require('lodash');
     global.depName = 'HelloWorld-' + Date.now();
 }
