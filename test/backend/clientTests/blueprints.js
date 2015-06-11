@@ -1,6 +1,9 @@
 'use strict';
 
 
+var _ = require('lodash');
+var expect = require('expect.js');
+
 describe('blueprints:', function(){
 
     it('should list blueprints', function( done ){

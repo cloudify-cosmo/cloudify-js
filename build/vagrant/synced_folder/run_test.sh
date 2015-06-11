@@ -3,6 +3,8 @@ SYSTEM_TESTS_FOLDER=system-tests
 rm -rf $SYSTEM_TESTS_FOLDER || echo "folder does not exist"
 git clone https://github.com/cloudify-cosmo/cloudify-js.git $SYSTEM_TESTS_FOLDER
 cd $SYSTEM_TESTS_FOLDER
+#todo: remove this once merged
+git checkout CFY-2106-system-tests
 
 sudo npm cache clean
 npm install

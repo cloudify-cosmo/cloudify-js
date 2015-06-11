@@ -1,4 +1,5 @@
 'use strict';
+var expect = require('expect.js');
 
 describe('manager:', function () {
     it('should get manager status', function (done) {

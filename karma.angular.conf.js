@@ -11,7 +11,6 @@ module.exports = function(config) {
             '3rd-parties/angular-mocks/angular-mocks.js',
             //'3rd-parties/angular-sanitize/angular-sanitize.js',
             //'3rd-parties/angular-resource/angular-resource.js',
-            'node_modules/expect.js/index.js',
             'dist/cloudify.angular.js',
             'test/backend/client.angular.spec.js'
 

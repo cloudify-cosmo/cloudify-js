@@ -10,6 +10,7 @@
 
  *********************************************************/
 
+var expect = require('expect.js');
 
 // add custom message to expect.js
 // https://github.com/Automattic/expect.js/issues/18

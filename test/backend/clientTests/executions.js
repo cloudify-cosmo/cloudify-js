@@ -2,6 +2,10 @@
 
 var execution;
 
+var _ = require('lodash');
+var expect = require('expect.js');
+
+
 describe('executions:', function () {
     it('should list executions', function( done ){
         testClient.executions.list('HelloWorld', null, function(err, response, body){

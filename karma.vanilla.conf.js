@@ -7,7 +7,6 @@ module.exports = function(config) {
         frameworks: ['browserify', 'mocha'],
 
         files: [
-            'node_modules/expect.js/index.js',
             'dist/cloudify.vanilla.js',
             'test/backend/client.vanilla.spec.js'
 

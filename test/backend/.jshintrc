@@ -21,7 +21,6 @@
     "globals": {
         "angular": false,
         "$": false,
-        "_": false,
         "after": false,
         "afterEach": false,
         "before": false,
@@ -30,7 +29,6 @@
         "it": false,
         "testClient" : false,
         "TestClient" : false,
-        "expect" : false,
         "inject" : false
     }
 }
