@@ -18,7 +18,7 @@ cfy deployments create -b HelloWorld -d HelloWorld
 cfy deployments create -b nodecellar -d nodecellar --inputs test/resources/cloudify-nodecellar-example-inputs.yaml
 
 if [ "$TEST_TYPE" = "" ];then
-    TEST_TYPE="mocha"
+    TEST_TYPE="mochaTest"
 fi
 echo "TEST_TYPE is $TEST_TYPE"
 
