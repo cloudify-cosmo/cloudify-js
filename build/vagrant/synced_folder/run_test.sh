@@ -9,6 +9,8 @@ git checkout CFY-2106-system-tests
 sudo npm cache clean
 npm install
 
+bower install
+
 export PROTRACTOR_BASE_URL=http://localhost
 
 echo "uploading blueprints and creating deployments for cloudify-js tests"
