@@ -5,9 +5,10 @@ var expect = require('expect.js');
 
 describe('nodeInstances:', function () {
     it('should list deployment nodes instances', function (done) {
-        testClient.deployments.list(null, null, function( err, response, body ){
-            console.log('list deployments body is', body);
-            var depName = body[0];
+        testClient.deployments.list(null,  function( err, response, body ){
+            var depName = JSON.parse(body)[0].id;
+
+            console.log('depName is', depName);
 
             testClient.nodeInstances.list(depName, null, function (err, response, body) {
                 expect(body).to.be.ok();
