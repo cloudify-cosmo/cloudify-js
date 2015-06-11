@@ -28,13 +28,10 @@
         "beforeEach": false,
         "describe": false,
         "it": false,
-        "waitsFor": false,
-        "runs": false,
         "testClient" : false,
         "TestClient" : false,
         "expect" : false,
-        "inject" : false,
-        "depName" : false
+        "inject" : false
     }
 }
 
