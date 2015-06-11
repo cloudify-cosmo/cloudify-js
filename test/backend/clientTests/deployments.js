@@ -1,5 +1,6 @@
 'use strict';
 
+var depName = 'HelloWorld-' + Date.now();
 describe('deployments:', function () {
 
     it('should create a deployment', function (done) {

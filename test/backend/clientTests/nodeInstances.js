@@ -4,14 +4,19 @@ var instances;
 
 describe('nodeInstances:', function () {
     it('should list deployment nodes instances', function (done) {
-        testClient.nodeInstances.list(depName, null, function (err, response, body) {
-            expect(body).to.be.ok();
-            expect(response.statusCode).to.be(200);
+        testClient.deployments.list(null, null, function( err, response, body ){
+            console.log('list deployments body is', body);
+            var depName = body[0];
 
-            instances = JSON.parse(body);
-            expect(instances).to.not.be.empty();
-            done();
+            testClient.nodeInstances.list(depName, null, function (err, response, body) {
+                expect(body).to.be.ok();
+                expect(response.statusCode).to.be(200);
 
+                instances = JSON.parse(body);
+                expect(instances).to.not.be.empty();
+                done();
+
+            });
         });
     });
 

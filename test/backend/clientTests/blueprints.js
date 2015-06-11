@@ -1,17 +1,18 @@
 'use strict';
 
+
 describe('blueprints:', function(){
 
-    it('should list blueprints', function( done ){
+    it.only('should list blueprints', function( done ){
         testClient.blueprints.list(null, function(err, response, body){
-            expect(body).to.be.ok();
+            expect(body).to.be.withMessage('body should exist').ok();
             expect(response.statusCode).to.be(200);
 
             var blueprints = JSON.parse(body);
             expect(blueprints).to.not.be.empty();
 
             var blueprint = _.find(blueprints, {'id': 'HelloWorld'});
-            expect(blueprint).to.be.ok();
+            expect(blueprint).to.be.withMessage('Hello World Blueprint does not exist').ok();
 
             done();
         });

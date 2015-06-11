@@ -4,7 +4,7 @@ module.exports = function(config) {
 
         basePath: '',
 
-        frameworks: ['browserify', 'jasmine'],
+        frameworks: ['browserify', 'mocha'],
 
         files: [
             'node_modules/expect.js/index.js',
@@ -15,12 +15,14 @@ module.exports = function(config) {
         ],
 
         exclude: [],
-
+        proxies:{
+            '/cloudify-api' : 'http://10.10.1.10'
+        },
         preprocessors: {
             'test/backend/client.jquery.spec.js': ['browserify']
         },
 
-        reporters: ['progress'],
+        reporters: ['junit','spec','failed'],
 
         port: 9876,
 
@@ -39,8 +41,13 @@ module.exports = function(config) {
 
         plugins: [
             'karma-chrome-launcher',
+            'karma-spec-reporter',
+            'karma-failed-reporter',
+            'karma-junit-reporter',
             'karma-phantomjs-launcher',
-            'karma-jasmine', 'karma-browserify'],
+            'karma-mocha',
+            'karma-browserify'
+        ],
 
         singleRun: false
     };

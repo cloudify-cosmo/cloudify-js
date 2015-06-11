@@ -4,7 +4,7 @@ module.exports = function(config) {
 
         basePath: '',
 
-        frameworks: ['browserify', 'jasmine'],
+        frameworks: ['browserify', 'mocha'],
 
         files: [
             '3rd-parties/angularjs/angular.js',
@@ -19,11 +19,14 @@ module.exports = function(config) {
 
         exclude: [],
 
+        proxies:{
+          '/cloudify-api' : 'http://10.10.1.10'
+        },
         preprocessors: {
             'test/backend/client.angular.spec.js': ['browserify']
         },
 
-        reporters: ['progress'],
+        reporters: ['junit','spec','failed'],
 
         port: 9876,
 
@@ -43,7 +46,11 @@ module.exports = function(config) {
         plugins: [
             'karma-chrome-launcher',
             'karma-phantomjs-launcher',
-            'karma-jasmine', 'karma-browserify'],
+            'karma-spec-reporter',
+            'karma-failed-reporter',
+            'karma-junit-reporter',
+            'karma-mocha',
+            'karma-browserify'],
 
         singleRun: false
     };

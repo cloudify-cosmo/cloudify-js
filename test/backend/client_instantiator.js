@@ -28,9 +28,9 @@ var conf = require('../../conf/dev/meConf.json');
 if (typeof(window) !== 'undefined') {
     window.testClient = new TestClient(conf);
     window._ = require('lodash');
-    window.depName = 'HelloWorld-' + Date.now();
+
 } else if (!!global) {
     global.testClient = new TestClient(conf);
     global._ = require('lodash');
-    global.depName = 'HelloWorld-' + Date.now();
+
 }
