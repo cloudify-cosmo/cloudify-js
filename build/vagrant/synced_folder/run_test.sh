@@ -9,7 +9,8 @@ git checkout CFY-2106-system-tests
 sudo npm cache clean
 npm install
 
-bower install
+sudo npm install -g bower
+bower install --config.interactive=false
 
 export PROTRACTOR_BASE_URL=http://localhost
 
