@@ -3,7 +3,7 @@
 
 describe('blueprints:', function(){
 
-    it.only('should list blueprints', function( done ){
+    it('should list blueprints', function( done ){
         testClient.blueprints.list(null, function(err, response, body){
             expect(body).to.be.withMessage('body should exist').ok();
             expect(response.statusCode).to.be(200);
