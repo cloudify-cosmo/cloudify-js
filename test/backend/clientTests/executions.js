@@ -51,7 +51,7 @@ describe('executions:', function () {
                 expect(response.statusCode === 201 || response.statusCode === 400).to.be(true);
 
                 if ( response.statusCode === 400 ){
-                    expect(execution.error_code).to.be('existing_running_execution_error');
+                    expect(execution.error_code === 'deployment_environment_creation_in_progress_error' || execution.error_code === 'existing_running_execution_error').to.be(true);
                 }else{
                     expect(execution.id).to.be.ok();
                 }
