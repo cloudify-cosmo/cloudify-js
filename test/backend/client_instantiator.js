@@ -25,6 +25,7 @@ var conf = require('./config.js');
  * Usage:
  *      require('../client_instantiator');
  */
+console.log('instantiating with conf', conf);
 if (typeof(window) !== 'undefined') {
     window.testClient = new TestClient(conf);
 
