@@ -1,7 +1,7 @@
 // override this file if you want to have different configuration
 
 
-module.exports = { "endpoint" : "http://localhost" };
+module.exports = { 'endpoint' : 'http://localhost' };
 
 try{ // for development purposes allow this code to run. put the file under 'dev'
     module.exports = require(process.env.TEST_ME_CONF);

@@ -4422,7 +4422,7 @@ DeploymentsClient.prototype.list = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : String.format(this.config.endpoint + '/deployments'  ),
+            'url' : this.config.endpoint + '/deployments',
             qs : qs
         },
         callback

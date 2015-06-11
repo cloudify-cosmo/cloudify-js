@@ -1,19 +1,22 @@
 'use strict';
 
-var execution;
 
 var _ = require('lodash');
 var expect = require('expect.js');
 
 
 describe('executions:', function () {
+    var execution;
+
     it('should list executions', function( done ){
-        testClient.executions.list('HelloWorld', null, function(err, response, body){
+        testClient.executions.list(null, null, function(err, response, body){
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
             var executions = JSON.parse(body);
             expect(executions).to.not.be.empty();
+
+            execution = executions[0]; // keep the first for another test
 
             testClient.executions.get(executions[0].id, null, function(err, response, body) {
                 expect(body).to.be.ok();
@@ -41,13 +44,17 @@ describe('executions:', function () {
             var workflow = _.find(deployment.workflows, {'name': 'install'});
             expect(workflow.name).to.be('install');
 
-            testClient.executions.start('nodecellar', workflow.name, workflow.parameters, false, false, function (err, response, body) {
-                expect(body).to.be.ok();
-                expect(response.statusCode).to.be(201);
+            testClient.executions.start('nodecellar', workflow.name, workflow.parameters, false, false, function (err, response, execution) {
+                expect(execution).to.be.ok();
+                // if execution is running, we will get 400.
+                // we are not here to test if REST is working correctly, just that the client is valid
+                expect(response.statusCode === 201 || response.statusCode === 400).to.be(true);
 
-                execution = body;
-                expect(execution.id).to.be.ok();
-
+                if ( response.statusCode === 400 ){
+                    expect(execution.error_code).to.be('existing_running_execution_error');
+                }else{
+                    expect(execution.id).to.be.ok();
+                }
                 done();
             });
 
@@ -58,8 +65,13 @@ describe('executions:', function () {
         // cancel the nodecellar install workflow execution.
         testClient.executions.cancel(execution.id, true, function (err, response, body) {
             expect(body).to.be.ok();
-            expect(response.statusCode).to.be(200);
 
+
+            expect(response.statusCode === 200 || response.statusCode === 400).to.be(true);
+            if ( response.statusCode === 400 ){ // most likely this is due to illegal action error..
+                // again, we are not here to check if REST is working well, we are here to check that client works as expected
+                expect(body.error_code).to.be('illegal_action_error');
+            }
             done();
         });
 
