@@ -7,6 +7,7 @@ module.exports = function(config) {
         frameworks: ['browserify', 'mocha'],
 
         files: [
+            'test/phantomjs.shim.js',
             '3rd-parties/jquery/dist/jquery.js',
             'dist/cloudify.jquery.js',
             'test/backend/client.jquery.spec.js'
@@ -15,7 +16,7 @@ module.exports = function(config) {
 
         exclude: [],
         proxies:{
-            '/cloudify-api' : 'http://10.10.1.10'
+            '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost'
         },
         preprocessors: {
             'test/backend/client.jquery.spec.js': ['browserify']
@@ -31,7 +32,7 @@ module.exports = function(config) {
 
         autoWatch: false,
 
-        browsers: ['Chrome'],
+        browsers: [process.env.TEST_BROWSER || 'Chrome'],
 
         browserify: {
             debug: true,

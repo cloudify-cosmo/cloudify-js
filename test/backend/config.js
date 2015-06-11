@@ -1,7 +1,12 @@
 // override this file if you want to have different configuration
 
+// set reasonable defaults
+if ( typeof(window) !== 'undefined' ){
+    module.exports = { 'endpoint' : 'http://localhost:9876/cloudify-api' }; // points to karma proxy
 
-module.exports = { 'endpoint' : 'http://localhost' };
+}else{
+    module.exports = { 'endpoint' : 'http://localhost' }; // point directly to localhost manager
+}
 
 try{ // for development purposes allow this code to run. put the file under 'dev'
     module.exports = require(process.env.TEST_ME_CONF);

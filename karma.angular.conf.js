@@ -7,6 +7,7 @@ module.exports = function(config) {
         frameworks: ['browserify', 'mocha'],
 
         files: [
+            'test/phantomjs.shim.js',
             '3rd-parties/angularjs/angular.js',
             '3rd-parties/angular-mocks/angular-mocks.js',
             //'3rd-parties/angular-sanitize/angular-sanitize.js',
@@ -19,7 +20,7 @@ module.exports = function(config) {
         exclude: [],
 
         proxies:{
-          '/cloudify-api' : 'http://10.10.1.10'
+          '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost'
         },
         preprocessors: {
             'test/backend/client.angular.spec.js': ['browserify']
@@ -35,7 +36,7 @@ module.exports = function(config) {
 
         autoWatch: false,
 
-        browsers: ['Chrome'],
+        browsers: [process.env.TEST_BROWSER || 'Chrome'],
 
         browserify: {
             debug: true,

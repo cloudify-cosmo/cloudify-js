@@ -45,13 +45,17 @@ describe('executions:', function () {
             expect(workflow.name).to.be('install');
 
             testClient.executions.start('nodecellar', workflow.name, workflow.parameters, false, false, function (err, response, execution) {
+                console.log('this is response',response);
                 expect(execution).to.be.ok();
                 // if execution is running, we will get 400.
                 // we are not here to test if REST is working correctly, just that the client is valid
-                expect(response.statusCode === 201 || response.statusCode === 400).to.be(true);
+                var possibleStatusCodes = [201,400,500]; // see possible error codes below
+                expect(possibleStatusCodes.indexOf(response.statusCode) >= 0).to.withMessage('unexpected response code' + response.statusCode ).be(true);
 
-                if ( response.statusCode === 400 ){
-                    expect(execution.error_code === 'deployment_environment_creation_in_progress_error' || execution.error_code === 'existing_running_execution_error').to.be(true);
+                if ( response.statusCode !== 201 ){
+                    // internal_server_error = possible if "environment creation for deployment is cancelled"
+                    var possibleErrorCodes = ['deployment_environment_creation_in_progress_error', 'existing_running_execution_error','internal_server_error'];
+                    expect(possibleErrorCodes.indexOf(execution.error_code) >= 0).to.withMessage('unexpected error_code ' + execution.error_code).be(true);
                 }else{
                     expect(execution.id).to.be.ok();
                 }
