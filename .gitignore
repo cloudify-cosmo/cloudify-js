@@ -33,3 +33,7 @@ doc
 results.txt
 
 test-results.xml
+
+build/vagrant/aws
+build/vagrant/util
+build/vagrant/openstack
