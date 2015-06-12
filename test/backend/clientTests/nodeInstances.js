@@ -49,6 +49,7 @@ describe('nodeInstances:', function () {
             expect(possibleCodes.indexOf(response.statusCode) >= 0 ).to.withMessage('unexpected status code when updating :' + response.statusCode ).be(true);
 
             if ( response.statusCode === 415 ){
+                console.log('error code is', instance.error_code);
                 expect(instance.error_code).to.withMessage('failed updating node instance').be('hello_world'); // todo fill in here
                 done();
             }
