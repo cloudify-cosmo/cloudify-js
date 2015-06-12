@@ -64,7 +64,7 @@ describe('nodeInstances:', function () {
                 // reset node to previous state
                 testClient.nodeInstances.update(instances[0].id, oldState, oldProperties, 0, function (err, response, body) {
                     expect(body).to.be.ok();
-                    expect(possibleCodes.indexOf(response.statusCode)).to.withMessage('unable to restore state. responseCode :' + response.statusCode ).be(true);
+                    expect(possibleCodes.indexOf(response.statusCode) >= 0 ).to.withMessage('unable to restore state. responseCode :' + response.statusCode ).be(true);
 
                     done();
                 });
