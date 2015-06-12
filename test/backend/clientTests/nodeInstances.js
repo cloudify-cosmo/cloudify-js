@@ -45,10 +45,11 @@ describe('nodeInstances:', function () {
 
         testClient.nodeInstances.update(instances[0].id, newState, newProperties, 0, function (err, response, instance) {
             expect(instance).to.be.ok();
-            expect(response.statusCode).to.be(200 || 415);
+            var possibleCodes = [200,415];
+            expect(possibleCodes.indexOf(response.statusCode) >= 0 ).to.withMessage('unexpected status code when updating :' + response.statusCode ).be(true);
 
             if ( response.statusCode === 415 ){
-                expect(instance.error_code).to.be('hello_world'); // todo fill in here
+                expect(instance.error_code).to.withMessage('failed updating node instance').be('hello_world'); // todo fill in here
                 done();
             }
 
@@ -60,7 +61,7 @@ describe('nodeInstances:', function () {
                 // reset node to previous state
                 testClient.nodeInstances.update(instances[0].id, oldState, oldProperties, 0, function (err, response, body) {
                     expect(body).to.be.ok();
-                    expect(response.statusCode).to.be(200 || 415);
+                    expect(possibleCodes.indexOf(response.statusCode)).to.withMessage('unable to restore state. responseCode :' + response.statusCode ).be(true);
 
                     done();
                 });
