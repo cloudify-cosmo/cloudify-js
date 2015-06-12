@@ -71,8 +71,10 @@ describe('executions:', function () {
             expect(body).to.be.ok();
 
 
-            expect(response.statusCode === 200 || response.statusCode === 400).to.be(true);
-            if ( response.statusCode === 400 ){ // most likely this is due to illegal action error..
+            var possibleStatusCodes = [200,400];
+
+            expect( possibleStatusCodes.indexOf(response.statusCode) >= 0).to.withMessage('unexpected statusCode :' + response.statusCode).be(true);
+            if ( response.statusCode !== 200 ){ // most likely this is due to illegal action error..
                 // again, we are not here to check if REST is working well, we are here to check that client works as expected
                 expect(body.error_code).to.be('illegal_action_error');
             }
