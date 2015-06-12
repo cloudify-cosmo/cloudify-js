@@ -1,9 +1,10 @@
 'use strict';
 
-var instances;
 var expect = require('expect.js');
 
 describe('nodeInstances:', function () {
+    var instances;
+
     it('should list deployment nodes instances', function (done) {
         testClient.deployments.list(null,  function( err, response, body ){
             var depName = JSON.parse(body)[0].id;
@@ -42,24 +43,28 @@ describe('nodeInstances:', function () {
         };
         var oldProperties = instances[0].runtime_properties;
 
-        testClient.nodeInstances.update(instances[0].id, newState, newProperties, 0, function (err, response, body) {
-            expect(body).to.be.ok();
-            expect(response.statusCode).to.be(200);
+        testClient.nodeInstances.update(instances[0].id, newState, newProperties, 0, function (err, response, instance) {
+            expect(instance).to.be.ok();
+            expect(response.statusCode).to.be(200 || 415);
 
-            var instance = body;
-            expect(instance.id).to.be(instances[0].id);
-            expect(instance.state).to.be(newState);
-            expect(instance.runtime_properties).to.eql(newProperties);
-
-            // reset node to previous state
-            testClient.nodeInstances.update(instances[0].id, oldState, oldProperties, 0, function (err, response, body) {
-                expect(body).to.be.ok();
-                expect(response.statusCode).to.be(200);
-
+            if ( response.statusCode === 415 ){
+                expect(instance.error_code).to.be('hello_world'); // todo fill in here
                 done();
-            });
+            }
 
+            if ( response.statusCode === 200 ) {
+                expect(instance.id).to.be(instances[0].id);
+                expect(instance.state).to.be(newState);
+                expect(instance.runtime_properties).to.eql(newProperties);
 
+                // reset node to previous state
+                testClient.nodeInstances.update(instances[0].id, oldState, oldProperties, 0, function (err, response, body) {
+                    expect(body).to.be.ok();
+                    expect(response.statusCode).to.be(200);
+
+                    done();
+                });
+            }
         });
 
     });
