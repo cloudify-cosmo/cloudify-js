@@ -3,8 +3,12 @@ SYSTEM_TESTS_FOLDER=system-tests
 rm -rf $SYSTEM_TESTS_FOLDER || echo "folder does not exist"
 git clone https://github.com/cloudify-cosmo/cloudify-js.git $SYSTEM_TESTS_FOLDER
 cd $SYSTEM_TESTS_FOLDER
-#todo: remove this once merged
-git checkout master
+
+if [ "$TEST_BRANCH" = "" ]; then
+    TEST_BRANCH="master"
+fi
+echo "TEST_BRANCH is $TEST_BRANCH"
+git checkout $TEST_BRANCH
 
 sudo npm cache clean
 npm install
