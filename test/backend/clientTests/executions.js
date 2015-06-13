@@ -45,7 +45,7 @@ describe('executions:', function () {
             expect(workflow.name).to.be('install');
 
             testClient.executions.start('nodecellar', workflow.name, workflow.parameters, false, false, function (err, response, execution) {
-                console.log('this is response',response);
+                //console.log('this is response',response);
                 expect(execution).to.be.ok();
                 // if execution is running, we will get 400.
                 // we are not here to test if REST is working correctly, just that the client is valid
