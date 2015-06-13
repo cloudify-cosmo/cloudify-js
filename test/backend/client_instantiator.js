@@ -1,6 +1,6 @@
 'use strict';
 
-var conf = require('../../conf/dev/meConf.json');
+var conf = require('./config.js');
 
 /**
  * conf/dev/meConf.json holds the connection configuration:
@@ -25,12 +25,10 @@ var conf = require('../../conf/dev/meConf.json');
  * Usage:
  *      require('../client_instantiator');
  */
+console.log('instantiating with conf', conf);
 if (typeof(window) !== 'undefined') {
     window.testClient = new TestClient(conf);
-    window._ = require('lodash');
-    window.depName = 'HelloWorld-' + Date.now();
+
 } else if (!!global) {
     global.testClient = new TestClient(conf);
-    global._ = require('lodash');
-    global.depName = 'HelloWorld-' + Date.now();
 }

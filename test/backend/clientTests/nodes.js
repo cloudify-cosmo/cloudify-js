@@ -1,6 +1,7 @@
 'use strict';
 
 var nodes;
+var expect = require('expect.js');
 
 describe('nodes:', function () {
     it('should list deployment nodes', function (done) {

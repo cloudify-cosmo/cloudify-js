@@ -1,4 +1,5 @@
 'use strict';
+var expect = require('expect.js');
 
 describe('events:', function () {
     it('should get execution events', function(done) {

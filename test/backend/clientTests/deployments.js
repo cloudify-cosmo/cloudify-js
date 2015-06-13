@@ -1,5 +1,10 @@
 'use strict';
 
+var _ = require('lodash');
+var expect = require('expect.js');
+
+
+var depName = 'HelloWorld-' + Date.now();
 describe('deployments:', function () {
 
     it('should create a deployment', function (done) {

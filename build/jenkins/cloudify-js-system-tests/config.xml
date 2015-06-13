@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<matrix-project plugin="matrix-project@1.4.1">
+<project plugin="project@1.4.1">
   <actions/>
   <description></description>
   <keepDependencies>false</keepDependencies>
@@ -29,7 +29,7 @@
       <hudson.scm.SubversionSCM plugin="subversion@1.54">
         <locations>
           <hudson.scm.SubversionSCM_-ModuleLocation>
-            <remote>svn://svn-srv/SVN/ui/builds/cloudify-ui-system-tests</remote>
+            <remote>svn://svn-srv/SVN/ui/builds/cloudify-js-integration-tests</remote>
             <local>vagrant-config</local>
             <depthOption>infinity</depthOption>
             <ignoreExternalsOption>false</ignoreExternalsOption>
@@ -79,24 +79,36 @@
   <axes/>
   <builders>
     <hudson.tasks.Shell>
-      <command>echo &quot;user is $USER&quot;;
+      <command>set -e 
+set -v
+
+echo &quot;user is $USER&quot;;
 mkdir -p /tmp/automations
 
-DIR=$( cd &quot;$( dirname &quot;${BASH_SOURCE[0]}&quot; )&quot; &amp;&amp; pwd )
+DIR=`pwd`
 VAM=&quot;$DIR/vagrant-automation-machines&quot;
 TESTS=&quot;$DIR/system-tests&quot;
 VCONFIG=&quot;$DIR/vagrant-config&quot;
 
-export CONFIG_FILE=$VCONFIG/vagrant_config.json
-cp -f $VCONFIG/openstack-keyfile.pem /tmp/automations/openstack-keyfile.pem
+export CONFIG_FILE=$VCONFIG/cloudify-js-tests.json
+
+echo &quot;setting test type in config json&quot;
+# set -i &quot;s/__test_type__/$GRUNT_TASK/g&quot; &quot;$VCONFIG&quot;
+
+cp -f $VCONFIG/openstack-keyfile.pem /tmp/automations/cloudify-ui-system-test.pem
 
 cp -Rf $TESTS/build/vagrant/* $VAM/
 
 export VAGRANT_HOME=&quot;~/.vagrant_openstack&quot;
 cd $VAM/openstack
+FAILED=&quot;false&quot;
 vagrant destroy -f || echo &quot;no need to teardown the machine because it was not running&quot;
-vagrant up --provider=openstack || echo &quot;something is wrong&quot;
-vagrant destroy -f || echo &quot;could not tear down the machine&quot;</command>
+vagrant up --provider=openstack || FAILED=&quot;true&quot; 
+vagrant destroy -f || echo &quot;could not tear down the machine&quot;
+
+if [ &quot;$FAILED&quot; = &quot;true&quot; ];then 
+    failed is true so I write here something that will cause the build to fail
+fi</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
@@ -104,4 +116,4 @@ vagrant destroy -f || echo &quot;could not tear down the machine&quot;</command>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
     <runSequentially>false</runSequentially>
   </executionStrategy>
-</matrix-project>
+</project>
