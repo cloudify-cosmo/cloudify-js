@@ -7,7 +7,7 @@ describe('nodeInstances:', function () {
 
     it('should list deployment nodes instances', function (done) {
         testClient.deployments.list(null,  function( err, response, body ){
-            var depName = JSON.parse(body)[0].id;
+            var depName = body[0].id;
 
             console.log('depName is', depName);
 
@@ -15,7 +15,7 @@ describe('nodeInstances:', function () {
                 expect(body).to.be.ok();
                 expect(response.statusCode).to.be(200);
 
-                instances = JSON.parse(body);
+                instances = body;
                 expect(instances).to.not.be.empty();
                 done();
 
@@ -24,11 +24,11 @@ describe('nodeInstances:', function () {
     });
 
     it('should get node instance', function(done) {
-        testClient.nodeInstances.get(instances[0].id, null, function (err, response, body) {
-            expect(body).to.be.ok();
+        testClient.nodeInstances.get(instances[0].id, null, function (err, response, instance) {
+            expect(instance).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var instance = JSON.parse(body);
+            
             expect(instance.id).to.be(instances[0].id);
 
             done();

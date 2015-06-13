@@ -9,7 +9,7 @@ describe('nodes:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            nodes = JSON.parse(body);
+            nodes = body;
             expect(nodes).to.not.be.empty();
             done();
 
@@ -21,7 +21,7 @@ describe('nodes:', function () {
             expect(response.body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            body = JSON.parse(response.body)[0];
+            body = response.body[0];
             expect(body.id).to.be(nodes[0].id);
 
             done();

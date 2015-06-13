@@ -13,7 +13,7 @@ describe('executions:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var executions = JSON.parse(body);
+            var executions = body;
             expect(executions).to.not.be.empty();
 
             execution = executions[0]; // keep the first for another test
@@ -22,7 +22,7 @@ describe('executions:', function () {
                 expect(body).to.be.ok();
                 expect(response.statusCode).to.be(200);
 
-                var execution = JSON.parse(body);
+                var execution = body;
                 expect(execution.id).to.be(executions[0].id);
 
                 done();
@@ -38,7 +38,7 @@ describe('executions:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var deployment = JSON.parse(body);
+            var deployment = body;
             expect(deployment).to.be.ok();
 
             var workflow = _.find(deployment.workflows, {'name': 'install'});

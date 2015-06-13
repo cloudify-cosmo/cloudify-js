@@ -61,6 +61,7 @@ DeploymentOutputsClient.prototype.get = function( deployment_id, callback  ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format(this.config.endpoint + '/deployments/{0}/outputs', deployment_id )
         },
         callback
@@ -179,6 +180,7 @@ DeploymentsClient.prototype.list = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/deployments',
             qs : qs
         },
@@ -203,8 +205,9 @@ DeploymentsClient.prototype.get = function (deployment_id, _include, callback) {
 
     this.config.request(
         {
-            'method': 'GET',
-            'url': String.format(this.config.endpoint + '/deployments/{0}', deployment_id)
+            'method' : 'GET',
+            'json': true,
+            'url' : String.format( this.config.endpoint  + '/deployments/{0}', deployment_id )
         },
         callback
     );
@@ -277,6 +280,7 @@ DeploymentsClient.prototype.delete = function( deployment_id, ignore_live_nodes,
     this.config.request(
         {
             'method' : 'DELETE',
+            'json': true,
             'url' : String.format( this.config.endpoint + '/deployments/{0}', deployment_id ),
             qs: qs
         },
@@ -301,6 +305,7 @@ DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, c
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint  + '/deployments/{0}/workflows', deployment_id )
         },
         callback

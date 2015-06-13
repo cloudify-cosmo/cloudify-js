@@ -15,7 +15,7 @@ describe('deployments:', function () {
             testClient.deployments.get(depName, null, function (err, response, body) {
                 expect(body).to.be.ok();
                 expect(response.statusCode).to.be(200);
-                var deployment = JSON.parse(body);
+                var deployment = body;
                 expect(deployment).to.be.ok();
                 done();
             });
@@ -28,7 +28,7 @@ describe('deployments:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var deployments = JSON.parse(body);
+            var deployments = body;
             expect(deployments).to.not.be.empty();
 
             var deployment = _.find(deployments, {'id': depName});
@@ -42,7 +42,7 @@ describe('deployments:', function () {
         testClient.deployments.delete(depName, true, function (err, response, body) {
             expect(body).to.be.ok();
 
-            var bodyObj = JSON.parse(body);
+            var bodyObj = body;
 
             if (bodyObj.id) {
                 // delete successful

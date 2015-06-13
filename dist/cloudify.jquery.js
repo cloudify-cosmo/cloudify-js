@@ -4041,6 +4041,7 @@ BlueprintsClient.prototype.list = function( _include, callback ){
     }
     return this.config.request( {
         'method' : 'GET',
+        'json': true,
         'url' : this.config.endpoint + '/blueprints',
         'qs' : qs
     }, callback );
@@ -4062,6 +4063,7 @@ BlueprintsClient.prototype.get = function (blueprint_id, _include, callback) {
 
     return this.config.request({
             'method': 'GET',
+            'json': true,
             'url': String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id ),
             'qs': qs
         }, callback );
@@ -4076,6 +4078,7 @@ BlueprintsClient.prototype.delete = function(blueprint_id, _include, callback ){
     logger.trace('deleting blueprint');
     return this.config.request({
         'method' : 'DELETE',
+        'json': true,
         'url' : String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id )
     }, callback );
 };
@@ -4301,6 +4304,7 @@ DeploymentOutputsClient.prototype.get = function( deployment_id, callback  ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format(this.config.endpoint + '/deployments/{0}/outputs', deployment_id )
         },
         callback
@@ -4419,6 +4423,7 @@ DeploymentsClient.prototype.list = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/deployments',
             qs : qs
         },
@@ -4443,8 +4448,9 @@ DeploymentsClient.prototype.get = function (deployment_id, _include, callback) {
 
     this.config.request(
         {
-            'method': 'GET',
-            'url': String.format(this.config.endpoint + '/deployments/{0}', deployment_id)
+            'method' : 'GET',
+            'json': true,
+            'url' : String.format( this.config.endpoint  + '/deployments/{0}', deployment_id )
         },
         callback
     );
@@ -4517,6 +4523,7 @@ DeploymentsClient.prototype.delete = function( deployment_id, ignore_live_nodes,
     this.config.request(
         {
             'method' : 'DELETE',
+            'json': true,
             'url' : String.format( this.config.endpoint + '/deployments/{0}', deployment_id ),
             qs: qs
         },
@@ -4541,6 +4548,7 @@ DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, c
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint  + '/deployments/{0}/workflows', deployment_id )
         },
         callback
@@ -4757,6 +4765,7 @@ ExecutionsClient.prototype.list = function( deployment_id, _include, callback  )
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/executions',
             qs:qs
         },
@@ -4788,6 +4797,7 @@ ExecutionsClient.prototype.get = function( execution_id, _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint + '/executions/{0}', execution_id ),
             'qs' : qs
         },
@@ -4948,6 +4958,7 @@ ManagerClient.prototype.get_status = function( callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/status'
         },
         callback
@@ -4964,6 +4975,7 @@ ManagerClient.prototype.get_version = function( callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/version'
         },
         callback
@@ -4987,6 +4999,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint +  '/provider/context',
             'qs': qs
         },
@@ -5021,6 +5034,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
     this.config.request(
         {
             'method' : 'POST',
+            'json': true,
             'url' : this.config.endpoint + '/provider/context',
             body: body
         },
@@ -5081,6 +5095,7 @@ NodeInstancesClient.prototype.get = function( node_instance_id, _include, callba
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint + '/node-instances/{0}', node_instance_id),
             'qs': qs
         },
@@ -5155,6 +5170,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/node-instances',
             'qs' : qs
         },
@@ -5220,6 +5236,7 @@ NodesClient.prototype.list = function( deployment_id, node_id, _include , callba
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/nodes',
             qs: qs
         },
@@ -5284,6 +5301,7 @@ SearchClient.prototype.run_query = function( query, callback ){
     this.config.request(
         {
             'method' : 'POST',
+            'json': true,
             'url' : this.config.endpoint + '/search',
             'body' : query
         },

@@ -48,6 +48,7 @@ ExecutionsClient.prototype.list = function( deployment_id, _include, callback  )
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/executions',
             qs:qs
         },
@@ -79,6 +80,7 @@ ExecutionsClient.prototype.get = function( execution_id, _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint + '/executions/{0}', execution_id ),
             'qs' : qs
         },
