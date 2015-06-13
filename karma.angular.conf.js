@@ -20,7 +20,7 @@ module.exports = function(config) {
         exclude: [],
 
         proxies:{
-          '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost'
+          '/cloudify-api' : process.env.TEST_ENDPOINT || 'http://localhost'
         },
         preprocessors: {
             'test/backend/client.angular.spec.js': ['browserify']
