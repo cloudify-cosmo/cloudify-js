@@ -4095,15 +4095,35 @@ BlueprintsClient.prototype.delete = function(blueprint_id, _include, callback ){
  * @description
  * uploads a blueprint to cloudify's manager.
  *
+ * NOTE: currently only supports uploading from URL
+ *
+ *
+ * Archive file should contain a single directory in which there is a
+ * blueprint file named `blueprint_filename` (if `blueprint_filename`
+ * is None, this value will be passed to the REST service where a
+ * default value should be used).
+ * Blueprint ID parameter is available for specifying the
+ * blueprint's unique Id.
+
+ *
  * @exception error if function is not implemented. not all clients implement this function.
  *
- * @param {string} [blueprint_path] main blueprint yaml file path.
+ * @param {string} [blueprint_path] url to blueprint
  * @param {string} blueprint_id id of the uploaded blueprint
  * @param {ApiCallback} callback body gets the uploaded blueprint
  */
-BlueprintsClient.prototype.upload = function( blueprint_path , blueprint_id, callback ){
-    logger.trace('uploading blueprint');
-    throw new Error('this function is not implemented');
+// this is not upload. upload also packs
+BlueprintsClient.prototype.publish_archive = function( blueprint_path , blueprint_id, blueprint_filename, callback ){
+    logger.trace('getting blueprint by id');
+    var qs = {  'blueprint_archive_url' : blueprint_path , 'application_file_name' : blueprint_filename};
+
+
+    return this.config.request({
+        'method': 'PUT',
+        'json': true,
+        'url': String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id ),
+        'qs': qs
+    }, callback );
 };
 
 /**
@@ -4207,6 +4227,8 @@ function Client( config ){
         opts.auth = config.cloudifyAuth;
         origRequest(opts, callback);
     };
+
+    this.config = config; // keep config
 
     this.blueprints = new Blueprints( config );
     this.events = new Events( config );

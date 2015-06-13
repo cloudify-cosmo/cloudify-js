@@ -55,6 +55,8 @@ function Client( config ){
         origRequest(opts, callback);
     };
 
+    this.config = config; // keep config
+
     this.blueprints = new Blueprints( config );
     this.events = new Events( config );
     this.deployments = new Deployments( config );
