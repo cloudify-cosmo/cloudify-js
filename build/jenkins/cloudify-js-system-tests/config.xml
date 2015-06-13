@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project plugin="project@1.4.1">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM" plugin="multiple-scms@0.4">
+    <scms>
+      <hudson.plugins.git.GitSCM plugin="git@2.3.5">
+        <configVersion>2</configVersion>
+        <userRemoteConfigs>
+          <hudson.plugins.git.UserRemoteConfig>
+            <url>https://github.com/cloudify-cosmo/cloudify-js.git</url>
+          </hudson.plugins.git.UserRemoteConfig>
+        </userRemoteConfigs>
+        <branches>
+          <hudson.plugins.git.BranchSpec>
+            <name>*/CFY-2106-system-tests</name>
+          </hudson.plugins.git.BranchSpec>
+        </branches>
+        <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+        <submoduleCfg class="list"/>
+        <extensions>
+          <hudson.plugins.git.extensions.impl.RelativeTargetDirectory>
+            <relativeTargetDir>system-tests</relativeTargetDir>
+          </hudson.plugins.git.extensions.impl.RelativeTargetDirectory>
+        </extensions>
+      </hudson.plugins.git.GitSCM>
+      <hudson.scm.SubversionSCM plugin="subversion@1.54">
+        <locations>
+          <hudson.scm.SubversionSCM_-ModuleLocation>
+            <remote>svn://svn-srv/SVN/ui/builds/cloudify-js-integration-tests</remote>
+            <local>vagrant-config</local>
+            <depthOption>infinity</depthOption>
+            <ignoreExternalsOption>false</ignoreExternalsOption>
+          </hudson.scm.SubversionSCM_-ModuleLocation>
+        </locations>
+        <excludedRegions></excludedRegions>
+        <includedRegions></includedRegions>
+        <excludedUsers></excludedUsers>
+        <excludedRevprop></excludedRevprop>
+        <excludedCommitMessages></excludedCommitMessages>
+        <workspaceUpdater class="hudson.scm.subversion.UpdateUpdater"/>
+        <ignoreDirPropChanges>false</ignoreDirPropChanges>
+        <filterChangelog>false</filterChangelog>
+      </hudson.scm.SubversionSCM>
+      <hudson.plugins.git.GitSCM plugin="git@2.3.5">
+        <configVersion>2</configVersion>
+        <userRemoteConfigs>
+          <hudson.plugins.git.UserRemoteConfig>
+            <url>https://github.com/cloudify-cosmo/vagrant-automation-machines.git</url>
+          </hudson.plugins.git.UserRemoteConfig>
+        </userRemoteConfigs>
+        <branches>
+          <hudson.plugins.git.BranchSpec>
+            <name>*/master</name>
+          </hudson.plugins.git.BranchSpec>
+        </branches>
+        <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+        <submoduleCfg class="list"/>
+        <extensions>
+          <hudson.plugins.git.extensions.impl.RelativeTargetDirectory>
+            <relativeTargetDir>vagrant-automation-machines</relativeTargetDir>
+          </hudson.plugins.git.extensions.impl.RelativeTargetDirectory>
+        </extensions>
+      </hudson.plugins.git.GitSCM>
+    </scms>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <hudson.triggers.TimerTrigger>
+      <spec>H H * * *</spec>
+    </hudson.triggers.TimerTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <axes/>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>set -e 
+set -v
+
+echo &quot;user is $USER&quot;;
+mkdir -p /tmp/automations
+
+DIR=`pwd`
+VAM=&quot;$DIR/vagrant-automation-machines&quot;
+TESTS=&quot;$DIR/system-tests&quot;
+VCONFIG=&quot;$DIR/vagrant-config&quot;
+
+export CONFIG_FILE=$VCONFIG/cloudify-js-tests.json
+
+echo &quot;setting test type in config json&quot;
+# set -i &quot;s/__test_type__/$GRUNT_TASK/g&quot; &quot;$VCONFIG&quot;
+
+cp -f $VCONFIG/openstack-keyfile.pem /tmp/automations/cloudify-ui-system-test.pem
+
+cp -Rf $TESTS/build/vagrant/* $VAM/
+
+export VAGRANT_HOME=&quot;~/.vagrant_openstack&quot;
+cd $VAM/openstack
+FAILED=&quot;false&quot;
+vagrant destroy -f || echo &quot;no need to teardown the machine because it was not running&quot;
+vagrant up --provider=openstack || FAILED=&quot;true&quot; 
+vagrant destroy -f || echo &quot;could not tear down the machine&quot;
+
+if [ &quot;$FAILED&quot; = &quot;true&quot; ];then 
+    failed is true so I write here something that will cause the build to fail
+fi</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+  <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
+    <runSequentially>false</runSequentially>
+  </executionStrategy>
+</project>

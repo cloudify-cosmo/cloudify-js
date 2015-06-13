@@ -3983,9 +3983,14 @@ var request = require('browser-request');
 var log4js = require('log4js');
 log4js.configure({
     appenders: [
-        { type: 'console' }
-    ],
-    replaceConsole: true
+        {
+            type: 'console',
+            layout: {
+                type: 'pattern',
+                pattern:'[ %d ] [ %c ] :: %m'
+            }
+        }
+    ]
 });
 var logger = log4js.getLogger('cloudify.angular');
 
@@ -4066,32 +4071,11 @@ BlueprintsClient.prototype.get = function (blueprint_id, _include, callback) {
 };
 
 /**
- * @description
- * Gets  a bluprint by its id.
- * @param {string} blueprint_id Blueprint's id to validate
- * @param {IncludeParam} [_include] List of fields to include in response
- * @param {ApiCallback} callback body gets the blueprint validation result
- */
-BlueprintsClient.prototype.validate = function (blueprint_id, _include, callback) {
-    logger.trace('validating blueprint by id');
-    var qs = {};
-    if (!!_include) {
-        qs._include = _include;
-    }
-
-    return this.config.request({
-        'method': 'GET',
-        'url': String.format(this.config.endpoint + '/blueprints/{0}/validate', blueprint_id ),
-        'qs': qs
-    }, callback );
-};
-
-/**
  * @description Deltes the blueprint whose id matches the provided blueprint id.
  * @param {string} blueprint_id the id of the blueprint to be deleted
  * @param {ApiCallback} callback body gets the deleted blueprint
  */
-BlueprintsClient.prototype.delete = function(blueprint_id, callback ){
+BlueprintsClient.prototype.delete = function(blueprint_id, _include, callback ){
     logger.trace('deleting blueprint');
     return this.config.request({
         'method' : 'DELETE',
@@ -4438,7 +4422,7 @@ DeploymentsClient.prototype.list = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : String.format(this.config.endpoint + '/deployments'  ),
+            'url' : this.config.endpoint + '/deployments',
             qs : qs
         },
         callback
@@ -4453,17 +4437,17 @@ DeploymentsClient.prototype.list = function( _include, callback ){
  * @param {IncludeParam} [_include] list of fields to include in response
  * @param {ApiCallback} callback body gets deployment
  */
-DeploymentsClient.prototype.get = function( deployment_id, _include, callback ){
+DeploymentsClient.prototype.get = function (deployment_id, _include, callback) {
     logger.trace('getting deployment');
-  if ( !deployment_id ){
-      callback(new Error('blueprint_id is missing'));
-      return;
-  }
+    if (!deployment_id) {
+        callback(new Error('blueprint_id is missing'));
+        return;
+    }
 
     this.config.request(
         {
-            'method' : 'GET',
-            'url' : String.format( this.config.endpoint  + '/deployments/{0}', deployment_id )
+            'method': 'GET',
+            'url': String.format(this.config.endpoint + '/deployments/{0}', deployment_id)
         },
         callback
     );
