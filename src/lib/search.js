@@ -23,6 +23,7 @@ SearchClient.prototype.run_query = function( query, callback ){
     this.config.request(
         {
             'method' : 'POST',
+            'json': true,
             'url' : this.config.endpoint + '/search',
             'body' : query
         },

@@ -6,9 +6,14 @@ var request = require('browser-request');
 var log4js = require('log4js');
 log4js.configure({
     appenders: [
-        { type:'console' }
-    ],
-    replaceConsole: true
+        {
+            type: 'console',
+            layout: {
+                type: 'pattern',
+                pattern:'[ %d ] [ %c ] :: %m'
+            }
+        }
+    ]
 });
 var logger = log4js.getLogger('cloudify.angular');
 
