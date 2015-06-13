@@ -21,7 +21,17 @@ module.exports = function (grunt) {
                 options: {
                     jshintrc: 'src/.jshintrc'
                 },
-                src: [ 'src/**/*.js', 'Gruntfile.js']
+                src: ['src/**/*.js', 'Gruntfile.js']
+            },
+            backendJasmineTest: {
+                options: {
+                    jshintrc: 'test/backend/.jshintrc'
+                },
+                files: {
+                    src: [
+                        'test/backend/**/*.js'
+                    ]
+                }
             }
         },
         uglify: {
@@ -41,7 +51,7 @@ module.exports = function (grunt) {
                 }
             }
         },
-        browserify:{
+        browserify: {
             options: {
                 banner: bannerTxt
             },
@@ -52,12 +62,12 @@ module.exports = function (grunt) {
             },
             jquery_client: {
                 files: {
-                    '<%= distDir %>/cloudify.jquery.js' : ['src/cloudify.jquery.js']
+                    '<%= distDir %>/cloudify.jquery.js': ['src/cloudify.jquery.js']
                 }
             },
             vanilla_client: {
                 files: {
-                    '<%= distDir %>/cloudify.vanilla.js' : ['src/cloudify.vanilla.js' ]
+                    '<%= distDir %>/cloudify.vanilla.js': ['src/cloudify.vanilla.js']
                 }
             }
         },
@@ -74,25 +84,67 @@ module.exports = function (grunt) {
                     }
                 }
             }
+        },
+        // Configure a mochaTest task
+        mochaTest: {
+            test: {
+                options: {
+                    reporter: 'spec',
+                    captureFile: 'results.txt', // Optionally capture the reporter output to a file
+                    quiet: false, // Optionally suppress output to standard out (defaults to false)
+                    clearRequireCache: false, // Optionally clear the require cache before running tests (defaults to false)
+                    timeout: 20000
+                },
+                src: ['test/backend/client.node.spec.js']
+            }
+        },
+        karma: {
+            debug: {
+                configFile: 'karma.vanilla.conf.js',
+                singleRun:false
+            },
+            unit: {
+                configFile: 'karma.vanilla.conf.js',
+                singleRun: true
+            },
+            vanilla: {
+                configFile: 'karma.vanilla.conf.js',
+                singleRun: true
+            },
+            jquery: {
+                configFile: 'karma.jquery.conf.js',
+                singleRun: true
+            },
+            angular: {
+                configFile: 'karma.angular.conf.js',
+                singleRun: true
+            }
         }
     });
 
 
     grunt.registerTask('test', [
-
+        'jshint',
+        'browserify',
+        'karma:jquery'
     ]);
 
-    grunt.registerTask('build',[
+    grunt.registerTask('mocha', [
+        'jshint',
+        'browserify',
+        'mochaTest'
+    ]);
+
+    grunt.registerTask('build', [
         'jshint',
         'browserify',
         'uglify'
     ]);
 
 
-
     grunt.registerTask('default', [
         'jshint',
-        'test',
+        //'test',
         'build'
     ]);
 };

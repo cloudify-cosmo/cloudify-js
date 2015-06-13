@@ -3,6 +3,7 @@
     "browser": true,
     "esnext": true,
     "bitwise": true,
+    "camelcase": false,
     "curly": true,
     "eqeqeq": true,
     "immed": true,
@@ -11,6 +12,7 @@
     "newcap": true,
     "noarg": true,
     "quotmark": "single",
+    "regexp": true,
     "undef": true,
     "unused": true,
     "strict": true,
@@ -24,6 +26,10 @@
         "before": false,
         "beforeEach": false,
         "describe": false,
-        "it": false
+        "it": false,
+        "testClient" : false,
+        "TestClient" : false,
+        "inject" : false
     }
 }
+
