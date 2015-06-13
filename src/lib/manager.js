@@ -26,6 +26,7 @@ ManagerClient.prototype.get_status = function( callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/status'
         },
         callback
@@ -42,6 +43,7 @@ ManagerClient.prototype.get_version = function( callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint + '/version'
         },
         callback
@@ -65,6 +67,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : this.config.endpoint +  '/provider/context',
             'qs': qs
         },
@@ -99,6 +102,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
     this.config.request(
         {
             'method' : 'POST',
+            'json': true,
             'url' : this.config.endpoint + '/provider/context',
             body: body
         },

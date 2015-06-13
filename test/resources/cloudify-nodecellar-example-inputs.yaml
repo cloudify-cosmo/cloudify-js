@@ -1,0 +1,3 @@
+image: 'ubuntu_14.04'
+flavor: 'm1.small'
+agent_user: 'ubuntu'

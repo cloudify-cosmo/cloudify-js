@@ -61,6 +61,7 @@ DeploymentOutputsClient.prototype.get = function( deployment_id, callback  ){
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format(this.config.endpoint + '/deployments/{0}/outputs', deployment_id )
         },
         callback
@@ -179,7 +180,8 @@ DeploymentsClient.prototype.list = function( _include, callback ){
     this.config.request(
         {
             'method' : 'GET',
-            'url' : String.format(this.config.endpoint + '/deployments'  ),
+            'json': true,
+            'url' : this.config.endpoint + '/deployments',
             qs : qs
         },
         callback
@@ -194,16 +196,17 @@ DeploymentsClient.prototype.list = function( _include, callback ){
  * @param {IncludeParam} [_include] list of fields to include in response
  * @param {ApiCallback} callback body gets deployment
  */
-DeploymentsClient.prototype.get = function( deployment_id, _include, callback ){
+DeploymentsClient.prototype.get = function (deployment_id, _include, callback) {
     logger.trace('getting deployment');
-  if ( !deployment_id ){
-      callback(new Error('blueprint_id is missing'));
-      return;
-  }
+    if (!deployment_id) {
+        callback(new Error('blueprint_id is missing'));
+        return;
+    }
 
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint  + '/deployments/{0}', deployment_id )
         },
         callback
@@ -277,6 +280,7 @@ DeploymentsClient.prototype.delete = function( deployment_id, ignore_live_nodes,
     this.config.request(
         {
             'method' : 'DELETE',
+            'json': true,
             'url' : String.format( this.config.endpoint + '/deployments/{0}', deployment_id ),
             qs: qs
         },
@@ -301,6 +305,7 @@ DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, c
     this.config.request(
         {
             'method' : 'GET',
+            'json': true,
             'url' : String.format( this.config.endpoint  + '/deployments/{0}/workflows', deployment_id )
         },
         callback

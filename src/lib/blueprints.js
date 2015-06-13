@@ -33,6 +33,7 @@ BlueprintsClient.prototype.list = function( _include, callback ){
     }
     return this.config.request( {
         'method' : 'GET',
+        'json': true,
         'url' : this.config.endpoint + '/blueprints',
         'qs' : qs
     }, callback );
@@ -54,30 +55,10 @@ BlueprintsClient.prototype.get = function (blueprint_id, _include, callback) {
 
     return this.config.request({
             'method': 'GET',
+            'json': true,
             'url': String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id ),
             'qs': qs
         }, callback );
-};
-
-/**
- * @description
- * Gets  a bluprint by its id.
- * @param {string} blueprint_id Blueprint's id to validate
- * @param {IncludeParam} [_include] List of fields to include in response
- * @param {ApiCallback} callback body gets the blueprint validation result
- */
-BlueprintsClient.prototype.validate = function (blueprint_id, _include, callback) {
-    logger.trace('validating blueprint by id');
-    var qs = {};
-    if (!!_include) {
-        qs._include = _include;
-    }
-
-    return this.config.request({
-        'method': 'GET',
-        'url': String.format(this.config.endpoint + '/blueprints/{0}/validate', blueprint_id ),
-        'qs': qs
-    }, callback );
 };
 
 /**
@@ -89,6 +70,7 @@ BlueprintsClient.prototype.delete = function(blueprint_id, _include, callback ){
     logger.trace('deleting blueprint');
     return this.config.request({
         'method' : 'DELETE',
+        'json': true,
         'url' : String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id )
     }, callback );
 };
