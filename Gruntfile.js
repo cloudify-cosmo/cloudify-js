@@ -94,7 +94,7 @@ module.exports = function (grunt) {
                 ]
             }
         },
-        connect: {
+        connect: { // grunt connect:server:keepalive
             server: {
                 options: {
                     port: 9001,
@@ -136,7 +136,7 @@ module.exports = function (grunt) {
             },
             jquery: {
                 configFile: 'karma.jquery.conf.js',
-                singleRun: true
+                singleRun: false
             },
             angular: {
                 configFile: 'karma.angular.conf.js',

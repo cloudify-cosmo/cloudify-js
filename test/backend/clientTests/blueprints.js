@@ -11,7 +11,9 @@ describe('blueprints:', function(){
     describe('upload & delete', function(){
         it('should upload archive', function(done){
             // we will use the archive api to upload a new blueprint
-            testClient.blueprints.publish_archive( testClient.config.endpoint + '/blueprints/HelloWorld/archive', blueprintName, 'blueprint.yaml', function(err, response, body){
+            testClient.blueprints.publish_archive( 'https://github.com/cloudify-cosmo/cloudify-nodecellar-example/archive/3.2.zip', blueprintName, 'local-blueprint.yaml', function(err, response, body){
+                console.log('this is error,  body', err, body);
+                expect(err).to.be(null);
                 expect(body.id).to.be(blueprintName);
                 done();
             });
@@ -27,7 +29,7 @@ describe('blueprints:', function(){
     });
 
     it('should list blueprints', function( done ){
-        testClient.blueprints.list(null, function(err, response, body){
+        testClient.blueprints.list('id', function(err, response, body){
             expect(body).to.be.withMessage('body should exist').ok();
             expect(response.statusCode).to.be(200);
 
