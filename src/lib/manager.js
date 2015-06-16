@@ -1,5 +1,7 @@
 'use strict';
 
+
+
 var logger = require('log4js').getLogger('cloudify.manager');
 
 
@@ -80,7 +82,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
  * bootstrap with relevant cloudify and cloud provider context information
  *
  * @param {string} name cloud provider name
- * @param {???} context context
+ * @param {object} context context
  * @param {ApiCallback} callback body gets create context result
  */
 ManagerClient.prototype.create_context = function( name, context, callback ){

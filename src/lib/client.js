@@ -1,24 +1,8 @@
 'use strict';
 
-/**
- * @callback ApiCallback
- * @param error an error if one occurred. null or undefined otherwise.
- * @param response the http response
- * @param body the http response body
- * @description callback for API calls.
- */
 
 /**
- * @typedef {???} CloudifyTimestamp
- */
-
-/**
- * @typedef {string} IncludeParam
- * @description List of fields to include in response
- */
-
-/**
- * @typedef {object}  ClientConfig
+ * @typedef {object}  CloudifyClient~ClientConfig
  * @property {string} endpoint the cloudify rest api endpoint. (e.g. http://manager-host-ip)
  * @property {object} authHeaders - header  as map of {key,value} for authentication implementation with cloudify. This object will be merged with request opts when a request is generated. they will override if key exists.
  * @property {object} [request] a request implementation. {@see https://www.npmjs.com/package/browser-request} . {@see https://www.npmjs.com/package/request}
@@ -27,10 +11,7 @@
  *
  **/
 
-/**
- *
- * @type {ManagerClient}
- */
+
 var Blueprints = require('./blueprints');
 var Events = require('./events');
 var Deployments = require('./deployments');
@@ -43,7 +24,7 @@ var Evaluate = require('./evaluate');
 /**
  *
  * @param {ClientConfig} config
- * @constructor
+ * @constructor CloudifyClient
  */
 function Client( config ){
 
@@ -54,6 +35,8 @@ function Client( config ){
         opts.auth = config.cloudifyAuth;
         origRequest(opts, callback);
     };
+
+    this.config = config; // keep config
 
     this.blueprints = new Blueprints( config );
     this.events = new Events( config );

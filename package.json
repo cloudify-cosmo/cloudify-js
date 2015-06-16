@@ -32,6 +32,8 @@
     "karma-failed-reporter": "0.0.3",
     "karma-junit-reporter": "~0.2.2",
     "karma-mocha": "~0.1.10",
+    "grunt-jsdoc": "~0.6.4",
+    "grunt-aws-s3": "~0.13.1",
     "sinon": "~1.15.3"
   },
   "repository": {
