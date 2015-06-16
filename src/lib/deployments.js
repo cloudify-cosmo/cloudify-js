@@ -160,6 +160,7 @@ DeploymentModificationClient.prototype.finish = function( deployment_id, modific
 
 function DeploymentsClient( config ){
     this.config = config;
+    this.outputs = new DeploymentOutputsClient( config );
 }
 
 /**
