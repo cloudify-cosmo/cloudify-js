@@ -101,7 +101,7 @@ module.exports = function (grunt) {
                     base: '.',
                     middleware: function (connect) {
                         return [
-                            connect.static('./test/manual'),
+                            connect.static('./test/example'),
                             connect.static('./dist')
                         ];
                     }
