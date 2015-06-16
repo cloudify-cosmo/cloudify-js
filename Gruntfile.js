@@ -13,6 +13,14 @@ module.exports = function (grunt) {
         distDir: 'dist',
         destDir: '<%= distDir %>',
         year: new Date().getFullYear(),
+        jsdoc: {
+            dist: {
+                src: ['src/lib/**/*.js', 'README.md'],
+                options: {
+                    destination: 'doc'
+                }
+            }
+        },
         jshint: {
             options: {
                 reporter: require('jshint-stylish')
@@ -71,6 +79,21 @@ module.exports = function (grunt) {
                 }
             }
         },
+        aws_s3: {
+            options: {
+                accessKeyId: '<%= aws.accessKey %>', // Use the variables
+                secretAccessKey: '<%= aws.secretKey %>', // You can also use env variables
+                uploadConcurrency: 5, // 5 simultaneous uploads
+                downloadConcurrency: 5, // 5 simultaneous downloads
+                access: 'public-read',
+                bucket: '<%= aws.bucket %>'
+            },
+            upload: {
+                files: [
+                    {dest: '', cwd: 'doc', action: 'upload', src: ['**'], expand: true}
+                ]
+            }
+        },
         connect: {
             server: {
                 options: {
@@ -121,6 +144,12 @@ module.exports = function (grunt) {
             }
         }
     });
+
+    grunt.registerTask('readAwsKeys', function(){
+        grunt.config.data.aws = grunt.file.readJSON(process.env.AWS_CONFIG || './dev/aws.json');
+    });
+
+    grunt.registerTask('upload', [ 'readAwsKeys', 'aws_s3:upload']);
 
 
     grunt.registerTask('test', [

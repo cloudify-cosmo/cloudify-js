@@ -3,15 +3,15 @@
 var logger = require('log4js').getLogger('cloudify.deployments');
 
 /**
- * @typedef {object} Inputs
+ * @typedef {object} DeploymentsClient~Inputs
  */
 
 /**
- * @typedef {object} Outputs
+ * @typedef {object} DeploymentsClient~Outputs
  */
 
 /**
- * @typedef {object} Deployment
+ * @typedef {object} DeploymentsClient~Deployment
  * @property {string} id the identifier of the deployment
  * @property {string} blueprint_id the identifier of the blueprint this deployment elongs to.
  * @property {Array<Workflow>} the workflows of this deployment.
@@ -21,16 +21,16 @@ var logger = require('log4js').getLogger('cloudify.deployments');
  */
 
 /**
- * @typedef {object} Workflow
+ * @typedef {object} DeploymentsClient~Workflow
  * @property {string} id the workflow's id
  * @property {string} name the workflow's name
- * @property {???} parameters the workflows parameters
+ * @property {object} parameters the workflows parameters
  */
 
 /**
- * @typedef {object} DeploymentOutputs
+ * @typedef {object} DeploymentOutputsClient~DeploymentOutputs
  * @property {string} deployment_id
- * @property {???} outputs
+ * @property {object} outputs
  */
 
 
@@ -69,18 +69,18 @@ DeploymentOutputsClient.prototype.get = function( deployment_id, callback  ){
 };
 
 /**
- * @typedef {object} DeploymentModificationNodeInstances
- * @property {???} added_and_related list of added nodes and nodes that related to them
- * @property {???} removed_and_related list of removed nodes and nodes that related to them
+ * @typedef {object} DeploymentModificationClient~DeploymentModificationNodeInstances
+ * @property {object} added_and_related list of added nodes and nodes that related to them
+ * @property {object} removed_and_related list of removed nodes and nodes that related to them
  */
 
 /**
- * @typedef {object} DeploymentModification
+ * @typedef {object} DeploymentModificationClient~DeploymentModification
  * @property {string} deployment_id deployment id the outputs belong to
  * @property {object} node_instances
- * @property {???} node_instances.added_and_related
- * @property {???} node_instances.remove_and_related
- * @property {???} modified_nodes original request modified nodes dict
+ * @property {object} node_instances.added_and_related
+ * @property {object} node_instances.remove_and_related
+ * @property {object} modified_nodes original request modified nodes dict
  */
 
 
@@ -98,7 +98,7 @@ function DeploymentModificationClient( config ){
  * @description
  * start deployment modification
  * @param {string} deployment_id the deployment id
- * @param {???} nodes the nodes to modify
+ * @param {object} nodes the nodes to modify
  * @param {ApiCallback} callback body get the deployment modification
  */
 DeploymentModificationClient.prototype.start = function( deployment_id, nodes, callback){
@@ -126,7 +126,7 @@ DeploymentModificationClient.prototype.start = function( deployment_id, nodes, c
  * @description
  * finish deployment modification
  * @param  {string} deployment_id the deployment id
- * @param {???} modification the modification response received on 'start'
+ * @param {object} modification the modification response received on 'start'
  * @param {ApiCallback} callback body gets the deployment modification
  */
 DeploymentModificationClient.prototype.finish = function( deployment_id, modification, callback ){

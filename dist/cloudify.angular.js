@@ -4012,9 +4012,10 @@ logger.trace('cloudifyjs is ready for use.');
 },{"./lib/client":20,"browser-request":1,"log4js":15}],19:[function(require,module,exports){
 'use strict';
 
+
 var logger = require('log4js').getLogger('cloudify.blueprints');
 /**
- * @typedef {object} Blueprint
+ * @typedef {object} BlueprintsClient~Blueprint
  *
  * @property {string} id The identifier of the blueprint
  * @property {number} created_at timestamp of blueprint creation
@@ -4173,25 +4174,9 @@ module.exports = BlueprintsClient;
 },{"log4js":15}],20:[function(require,module,exports){
 'use strict';
 
-/**
- * @callback ApiCallback
- * @param error an error if one occurred. null or undefined otherwise.
- * @param response the http response
- * @param body the http response body
- * @description callback for API calls.
- */
 
 /**
- * @typedef {???} CloudifyTimestamp
- */
-
-/**
- * @typedef {string} IncludeParam
- * @description List of fields to include in response
- */
-
-/**
- * @typedef {object}  ClientConfig
+ * @typedef {object}  CloudifyClient~ClientConfig
  * @property {string} endpoint the cloudify rest api endpoint. (e.g. http://manager-host-ip)
  * @property {object} authHeaders - header  as map of {key,value} for authentication implementation with cloudify. This object will be merged with request opts when a request is generated. they will override if key exists.
  * @property {object} [request] a request implementation. {@see https://www.npmjs.com/package/browser-request} . {@see https://www.npmjs.com/package/request}
@@ -4200,10 +4185,7 @@ module.exports = BlueprintsClient;
  *
  **/
 
-/**
- *
- * @type {ManagerClient}
- */
+
 var Blueprints = require('./blueprints');
 var Events = require('./events');
 var Deployments = require('./deployments');
@@ -4216,7 +4198,7 @@ var Evaluate = require('./evaluate');
 /**
  *
  * @param {ClientConfig} config
- * @constructor
+ * @constructor CloudifyClient
  */
 function Client( config ){
 
@@ -4271,15 +4253,15 @@ String.format = function() {
 var logger = require('log4js').getLogger('cloudify.deployments');
 
 /**
- * @typedef {object} Inputs
+ * @typedef {object} DeploymentsClient~Inputs
  */
 
 /**
- * @typedef {object} Outputs
+ * @typedef {object} DeploymentsClient~Outputs
  */
 
 /**
- * @typedef {object} Deployment
+ * @typedef {object} DeploymentsClient~Deployment
  * @property {string} id the identifier of the deployment
  * @property {string} blueprint_id the identifier of the blueprint this deployment elongs to.
  * @property {Array<Workflow>} the workflows of this deployment.
@@ -4289,16 +4271,16 @@ var logger = require('log4js').getLogger('cloudify.deployments');
  */
 
 /**
- * @typedef {object} Workflow
+ * @typedef {object} DeploymentsClient~Workflow
  * @property {string} id the workflow's id
  * @property {string} name the workflow's name
- * @property {???} parameters the workflows parameters
+ * @property {object} parameters the workflows parameters
  */
 
 /**
- * @typedef {object} DeploymentOutputs
+ * @typedef {object} DeploymentOutputsClient~DeploymentOutputs
  * @property {string} deployment_id
- * @property {???} outputs
+ * @property {object} outputs
  */
 
 
@@ -4337,18 +4319,18 @@ DeploymentOutputsClient.prototype.get = function( deployment_id, callback  ){
 };
 
 /**
- * @typedef {object} DeploymentModificationNodeInstances
- * @property {???} added_and_related list of added nodes and nodes that related to them
- * @property {???} removed_and_related list of removed nodes and nodes that related to them
+ * @typedef {object} DeploymentModificationClient~DeploymentModificationNodeInstances
+ * @property {object} added_and_related list of added nodes and nodes that related to them
+ * @property {object} removed_and_related list of removed nodes and nodes that related to them
  */
 
 /**
- * @typedef {object} DeploymentModification
+ * @typedef {object} DeploymentModificationClient~DeploymentModification
  * @property {string} deployment_id deployment id the outputs belong to
  * @property {object} node_instances
- * @property {???} node_instances.added_and_related
- * @property {???} node_instances.remove_and_related
- * @property {???} modified_nodes original request modified nodes dict
+ * @property {object} node_instances.added_and_related
+ * @property {object} node_instances.remove_and_related
+ * @property {object} modified_nodes original request modified nodes dict
  */
 
 
@@ -4366,7 +4348,7 @@ function DeploymentModificationClient( config ){
  * @description
  * start deployment modification
  * @param {string} deployment_id the deployment id
- * @param {???} nodes the nodes to modify
+ * @param {object} nodes the nodes to modify
  * @param {ApiCallback} callback body get the deployment modification
  */
 DeploymentModificationClient.prototype.start = function( deployment_id, nodes, callback){
@@ -4394,7 +4376,7 @@ DeploymentModificationClient.prototype.start = function( deployment_id, nodes, c
  * @description
  * finish deployment modification
  * @param  {string} deployment_id the deployment id
- * @param {???} modification the modification response received on 'start'
+ * @param {object} modification the modification response received on 'start'
  * @param {ApiCallback} callback body gets the deployment modification
  */
 DeploymentModificationClient.prototype.finish = function( deployment_id, modification, callback ){
@@ -4590,8 +4572,9 @@ module.exports = DeploymentsClient;
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
 
+
 /**
- * @typedef EvaluatedFunc
+ * @typedef {object} EvaluateClient~EvaluatedFunc
  * @property {string} deployment_id
  * @property {object} payload
  */
@@ -4639,6 +4622,7 @@ module.exports = EvaluateClient;
 
 },{"log4js":15}],23:[function(require,module,exports){
 'use strict';
+
 
 var logger = require('log4js').getLogger('cloudify.events');
 
@@ -4743,9 +4727,10 @@ module.exports = EventsClient;
 },{"log4js":15}],24:[function(require,module,exports){
 'use strict';
 
+
 var logger = require('log4js').getLogger('cloudify.executions');
 /**
- * @typedef {object} Execution
+ * @typedef {object} ExecutionsClient~Execution
  *
  * @property {string} id The execution's id.
  * @property {string} deployment_id the deployment's id this execution is related to.
@@ -4871,7 +4856,7 @@ ExecutionsClient.prototype.update = function( execution_id, status, error, callb
  *
  * @param {string} deployment_id the deployment's id to execute a workflow for.
  * @param {string} workflow_id the workflow to be executed id.
- * @param {???|null} [parameters] parameters for the workflow execution.
+ * @param {object|null} [parameters] parameters for the workflow execution.
  * @param {boolean|null} [allow_custom_parameters=false] determines whether to allow parameters which weren't defined in
  * the workflow parameters schema in the blueprint.
  * @param {boolean|null} [force=false] determines whether to force the execution of the workflow in a case where there's
@@ -4960,6 +4945,8 @@ module.exports = ExecutionsClient;
 },{"log4js":15}],25:[function(require,module,exports){
 'use strict';
 
+
+
 var logger = require('log4js').getLogger('cloudify.manager');
 
 
@@ -5040,7 +5027,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
  * bootstrap with relevant cloudify and cloud provider context information
  *
  * @param {string} name cloud provider name
- * @param {???} context context
+ * @param {object} context context
  * @param {ApiCallback} callback body gets create context result
  */
 ManagerClient.prototype.create_context = function( name, context, callback ){
@@ -5076,13 +5063,13 @@ module.exports = ManagerClient;
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
 
 /**
- * @typedef {object} NodeInstance
+ * @typedef {object} NodeInstancesClient~NodeInstance
  * @property {string} id the identifier of the node instance
  * @property {string} node_id the identifier of the node whom this is the instance of.
- * @property {???} relationships the node instance relationships
+ * @property {object} relationships the node instance relationships
  * @property {string} host_id the node instance host_id
  * @property {string} deployment_id the deployment id the node instance belongs to
- * @property {???} runtime_properties the runtime properties of the node instance
+ * @property {object} runtime_properties the runtime properties of the node instance
  * @property {string} state the current state of the node instance
  * @property {number} version the current version of the node instance - used for optimistic locking on update)
  */
@@ -5135,7 +5122,7 @@ NodeInstancesClient.prototype.get = function( node_instance_id, _include, callba
  *
  * @param {string} node_instance_id the identifier of the node instance to update
  * @param {string|null} [state] the updated state
- * @param {???|null} [runtime_properties=null] the updated runtime properties
+ * @param {object|null} [runtime_properties=null] the updated runtime properties
  * @param {number} [version=0] current version value of this node instance in cloudify's storage (used for optimistic locking)
  * @param {ApiCallback} callback body gets the updated node instance
  */
@@ -5211,19 +5198,19 @@ module.exports = NodeInstancesClient;
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
 
+
 /**
- * @typedef {object} Node
+ * @typedef {object} NodesClient~Node
  * @property {string} id the identifier of the node
  * @property {string} deployment_id the deployment id the node instance belongs to
- * @property {???} properties the static properties of the node
+ * @property {object} properties the static properties of the node
  * @property {object} operations the node operations mapped to plugins
- * @property {[]} relationships the node instance relationships
  * @property {string} blueprint_id the id of the blueprint this node belongs to.
  * @property {object} plugins the plug
  * @property {number} number_of_instances the umber of instances this node has
  * @property {number} deploy_number_of_instances the number of instances set for this node when the deployment was created
  * @property {string} host_id the id of the node instance which hosts this node
- * @property {[]} type_hierarchy the type hierarchy of this node
+ * @property {Array<string>} type_hierarchy the type hierarchy of this node
  * @property {string} type the type of this node
  */
 

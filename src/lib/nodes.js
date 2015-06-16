@@ -2,19 +2,19 @@
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
 
+
 /**
- * @typedef {object} Node
+ * @typedef {object} NodesClient~Node
  * @property {string} id the identifier of the node
  * @property {string} deployment_id the deployment id the node instance belongs to
- * @property {???} properties the static properties of the node
+ * @property {object} properties the static properties of the node
  * @property {object} operations the node operations mapped to plugins
- * @property {[]} relationships the node instance relationships
  * @property {string} blueprint_id the id of the blueprint this node belongs to.
  * @property {object} plugins the plug
  * @property {number} number_of_instances the umber of instances this node has
  * @property {number} deploy_number_of_instances the number of instances set for this node when the deployment was created
  * @property {string} host_id the id of the node instance which hosts this node
- * @property {[]} type_hierarchy the type hierarchy of this node
+ * @property {Array<string>} type_hierarchy the type hierarchy of this node
  * @property {string} type the type of this node
  */
 
