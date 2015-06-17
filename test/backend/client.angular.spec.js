@@ -24,7 +24,7 @@ describe('angular client', function(){
 
     it('should use timeout', function( done ){
         angular.mock.inject(function($timeout){
-            testClient.blueprints.list(null, function(){
+            testClient.blueprints.list('id', function(){
                 expect( $timeout.calledOnce );
                 done();
             });

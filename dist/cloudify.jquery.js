@@ -3994,7 +3994,6 @@ log4js.configure({
 });
 var logger = log4js.getLogger('cloudify.angular');
 
-
 /**
  * @param {ClientConfig} config
  */
@@ -4115,13 +4114,21 @@ BlueprintsClient.prototype.publish_archive = function( blueprint_path , blueprin
     logger.trace('getting blueprint by id');
     var qs = {  'blueprint_archive_url' : blueprint_path , 'application_file_name' : blueprint_filename};
 
-
     return this.config.request({
         'method': 'PUT',
-        'json': true,
+        //'json': true, // guy - for some reason, in frontend it causes REST server to fail..
         'url': String.format(this.config.endpoint + '/blueprints/{0}', blueprint_id ),
         'qs': qs
-    }, callback );
+    }, function(err, response, body){
+        if ( typeof(body) === 'string' ){
+            try{
+                body = JSON.parse(body);
+            }catch(e){
+
+            }
+            callback(err, response, body);
+        }
+    } );
 };
 
 /**

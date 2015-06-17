@@ -94,7 +94,7 @@ module.exports = function (grunt) {
                 ]
             }
         },
-        connect: {
+        connect: { // grunt connect:server:keepalive
             server: {
                 options: {
                     port: 9001,

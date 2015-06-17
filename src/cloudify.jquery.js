@@ -17,7 +17,6 @@ log4js.configure({
 });
 var logger = log4js.getLogger('cloudify.angular');
 
-
 /**
  * @param {ClientConfig} config
  */
