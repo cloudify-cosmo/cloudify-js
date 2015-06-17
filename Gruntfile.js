@@ -136,7 +136,7 @@ module.exports = function (grunt) {
             },
             jquery: {
                 configFile: 'karma.jquery.conf.js',
-                singleRun: false
+                singleRun: true
             },
             angular: {
                 configFile: 'karma.angular.conf.js',
