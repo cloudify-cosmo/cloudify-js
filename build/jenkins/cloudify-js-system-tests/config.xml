@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<project plugin="project@1.4.1">
+<project>
   <actions/>
   <description></description>
   <keepDependencies>false</keepDependencies>
@@ -76,7 +76,6 @@
     </hudson.triggers.TimerTrigger>
   </triggers>
   <concurrentBuild>false</concurrentBuild>
-  <axes/>
   <builders>
     <hudson.tasks.Shell>
       <command>set -e 
@@ -111,9 +110,12 @@ if [ &quot;$FAILED&quot; = &quot;true&quot; ];then
 fi</command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers/>
+  <publishers>
+    <hudson.tasks.Mailer plugin="mailer@1.11">
+      <recipients>cloudify-ui@gigaspaces.flowdock.com</recipients>
+      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
+      <sendToIndividuals>true</sendToIndividuals>
+    </hudson.tasks.Mailer>
+  </publishers>
   <buildWrappers/>
-  <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
-    <runSequentially>false</runSequentially>
-  </executionStrategy>
 </project>
