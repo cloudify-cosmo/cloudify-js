@@ -66,7 +66,7 @@ BlueprintsClient.prototype.get = function (blueprint_id, _include, callback) {
  * @param {string} blueprint_id the id of the blueprint to be deleted
  * @param {ApiCallback} callback body gets the deleted blueprint
  */
-BlueprintsClient.prototype.delete = function(blueprint_id, _include, callback ){
+BlueprintsClient.prototype.delete = function(blueprint_id, callback ){
     logger.trace('deleting blueprint');
     return this.config.request({
         'method' : 'DELETE',
