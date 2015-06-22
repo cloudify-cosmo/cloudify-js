@@ -4312,7 +4312,7 @@ DeploymentOutputsClient.prototype.get = function( deployment_id, callback  ){
         return;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -4362,7 +4362,7 @@ DeploymentModificationClient.prototype.start = function( deployment_id, nodes, c
         return;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'PATCH',
             'json' : true,
@@ -4390,7 +4390,7 @@ DeploymentModificationClient.prototype.finish = function( deployment_id, modific
         callback(new Error('deployment_id is missing'));
         return;
     }
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'PATCH',
             'json' : true,
@@ -4432,7 +4432,7 @@ DeploymentsClient.prototype.list = function( _include, callback ){
     }
 
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -4458,7 +4458,7 @@ DeploymentsClient.prototype.get = function (deployment_id, _include, callback) {
         return;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -4497,7 +4497,7 @@ DeploymentsClient.prototype.create = function( blueprint_id, deployment_id, inpu
         body.inputs = inputs;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'PUT',
             'json' : true,
@@ -4532,7 +4532,7 @@ DeploymentsClient.prototype.delete = function( deployment_id, ignore_live_nodes,
         qs.ignore_live_nodes = 'true';
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'DELETE',
             'json': true,
@@ -4557,7 +4557,7 @@ DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, c
         return;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
