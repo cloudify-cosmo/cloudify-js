@@ -4023,7 +4023,7 @@ angular.module('cloudifyjs').factory('CloudifyClient', [ '$timeout',function( $t
                     };
                 }
             }
-            origRequest.apply(null, origArguments );
+            return origRequest.apply(null, origArguments );
         };
 
         return new Client(config);
