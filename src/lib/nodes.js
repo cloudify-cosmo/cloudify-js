@@ -50,7 +50,7 @@ NodesClient.prototype.list = function( deployment_id, node_id, _include , callba
         qs.node_id = node_id;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,

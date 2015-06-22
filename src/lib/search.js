@@ -20,7 +20,7 @@ function SearchClient( config ){
  */
 SearchClient.prototype.run_query = function( query, callback ){
     logger.trace('running query');
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'json': true,

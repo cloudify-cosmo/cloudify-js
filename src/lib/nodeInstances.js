@@ -45,7 +45,7 @@ NodeInstancesClient.prototype.get = function( node_instance_id, _include, callba
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -88,7 +88,7 @@ NodeInstancesClient.prototype.update = function( node_instance_id, state, runtim
         body.state = state;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'PATCH',
             'url' : String.format( this.config.endpoint + '/node-instances/{0}', node_instance_id ),
@@ -120,7 +120,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,

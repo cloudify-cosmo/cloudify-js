@@ -4705,7 +4705,11 @@ EventsClient.prototype.get = function( execution_id, from_event, batch_size, inc
 EventsClient.prototype.query = function( query , callback ){
     logger.trace('getting events');
 
-    this.config.request(
+    if ( !callback ){
+        callback = function(){};
+    }
+
+    return this.config.request(
         {
             'method' : 'POST',
             'url' : this.config.endpoint + '/events',
@@ -4777,7 +4781,7 @@ ExecutionsClient.prototype.list = function( deployment_id, _include, callback  )
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -4809,7 +4813,7 @@ ExecutionsClient.prototype.get = function( execution_id, _include, callback ){
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -4842,7 +4846,7 @@ ExecutionsClient.prototype.update = function( execution_id, status, error, callb
         body.error = error;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'PATCH',
             'url' : String.format( this.config.endpoint + '/executions/{0}', execution_id ),
@@ -4899,7 +4903,7 @@ ExecutionsClient.prototype.start = function( deployment_id, workflow_id, paramet
         body.force = 'false';
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'url' : this.config.endpoint + '/executions',
@@ -4933,7 +4937,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
         body.action = 'cancel';
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'url' : String.format(this.config.endpoint + '/executions/{0}', execution_id),
@@ -4972,7 +4976,7 @@ function ManagerClient( config ){
  */
 ManagerClient.prototype.get_status = function( callback ){
     logger.trace('getting status');
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -4989,7 +4993,7 @@ ManagerClient.prototype.get_status = function( callback ){
  */
 ManagerClient.prototype.get_version = function( callback ){
     logger.trace('getting version');
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -5013,7 +5017,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
     if ( _include ){
         qs._include = _include;
     }
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -5048,7 +5052,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
 
     var body = { 'name': name, 'context' : context };
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'json': true,
@@ -5109,7 +5113,7 @@ NodeInstancesClient.prototype.get = function( node_instance_id, _include, callba
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -5152,7 +5156,7 @@ NodeInstancesClient.prototype.update = function( node_instance_id, state, runtim
         body.state = state;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'PATCH',
             'url' : String.format( this.config.endpoint + '/node-instances/{0}', node_instance_id ),
@@ -5184,7 +5188,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -5250,7 +5254,7 @@ NodesClient.prototype.list = function( deployment_id, node_id, _include , callba
         qs.node_id = node_id;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -5315,7 +5319,7 @@ function SearchClient( config ){
  */
 SearchClient.prototype.run_query = function( query, callback ){
     logger.trace('running query');
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'json': true,

@@ -23,7 +23,7 @@ function ManagerClient( config ){
  */
 ManagerClient.prototype.get_status = function( callback ){
     logger.trace('getting status');
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -40,7 +40,7 @@ ManagerClient.prototype.get_status = function( callback ){
  */
 ManagerClient.prototype.get_version = function( callback ){
     logger.trace('getting version');
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -64,7 +64,7 @@ ManagerClient.prototype.get_context = function( _include, callback ){
     if ( _include ){
         qs._include = _include;
     }
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -99,7 +99,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
 
     var body = { 'name': name, 'context' : context };
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'json': true,
