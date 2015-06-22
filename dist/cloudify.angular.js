@@ -4237,7 +4237,7 @@ function Client( config ){
 
     config.request = function( opts, callback ){
         opts.auth = config.cloudifyAuth;
-        origRequest(opts, callback);
+        return origRequest(opts, callback);
     };
 
     this.config = config; // keep config
