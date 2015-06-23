@@ -84,6 +84,8 @@ set -v
 echo &quot;user is $USER&quot;;
 mkdir -p /tmp/automations
 
+CLOUD=aws
+
 DIR=`pwd`
 VAM=&quot;$DIR/vagrant-automation-machines&quot;
 TESTS=&quot;$DIR/system-tests&quot;
@@ -94,15 +96,16 @@ export CONFIG_FILE=$VCONFIG/cloudify-js-tests.json
 echo &quot;setting test type in config json&quot;
 # set -i &quot;s/__test_type__/$GRUNT_TASK/g&quot; &quot;$VCONFIG&quot;
 
-cp -f $VCONFIG/openstack-keyfile.pem /tmp/automations/cloudify-ui-system-test.pem
+chmod 600 $VCONFIG/$CLOUD-keyfile.pem
+cp -f $VCONFIG/$CLOUD-keyfile.pem /tmp/automations/cloudify-ui-system-test.pem
 
 cp -Rf $TESTS/build/vagrant/* $VAM/
 
-export VAGRANT_HOME=&quot;~/.vagrant_openstack&quot;
-cd $VAM/openstack
+export VAGRANT_HOME=&quot;~/.vagrant_$CLOUD&quot;
+cd $VAM/$CLOUD
 FAILED=&quot;false&quot;
 vagrant destroy -f || echo &quot;no need to teardown the machine because it was not running&quot;
-vagrant up --provider=openstack || FAILED=&quot;true&quot; 
+vagrant up --provider=$CLOUD || FAILED=&quot;true&quot; 
 vagrant destroy -f || echo &quot;could not tear down the machine&quot;
 
 if [ &quot;$FAILED&quot; = &quot;true&quot; ];then 
