@@ -1,3 +1,6 @@
+set -e
+set -v
+
 cd /vagrant
 sudo apt-get update -y
 echo "instlalling prerequisites"
