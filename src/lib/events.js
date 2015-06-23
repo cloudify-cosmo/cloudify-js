@@ -78,7 +78,11 @@ EventsClient.prototype.get = function( execution_id, from_event, batch_size, inc
 EventsClient.prototype.query = function( query , callback ){
     logger.trace('getting events');
 
-    this.config.request(
+    if ( !callback ){
+        callback = function(){};
+    }
+
+    return this.config.request(
         {
             'method' : 'POST',
             'url' : this.config.endpoint + '/events',

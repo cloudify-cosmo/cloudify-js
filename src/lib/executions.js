@@ -46,7 +46,7 @@ ExecutionsClient.prototype.list = function( deployment_id, _include, callback  )
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -78,7 +78,7 @@ ExecutionsClient.prototype.get = function( execution_id, _include, callback ){
         qs._include = _include;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'GET',
             'json': true,
@@ -111,7 +111,7 @@ ExecutionsClient.prototype.update = function( execution_id, status, error, callb
         body.error = error;
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'PATCH',
             'url' : String.format( this.config.endpoint + '/executions/{0}', execution_id ),
@@ -168,7 +168,7 @@ ExecutionsClient.prototype.start = function( deployment_id, workflow_id, paramet
         body.force = 'false';
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'url' : this.config.endpoint + '/executions',
@@ -202,7 +202,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
         body.action = 'cancel';
     }
 
-    this.config.request(
+    return this.config.request(
         {
             'method' : 'POST',
             'url' : String.format(this.config.endpoint + '/executions/{0}', execution_id),
