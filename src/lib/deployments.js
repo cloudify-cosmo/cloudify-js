@@ -170,7 +170,7 @@ function DeploymentsClient( config ){
  * @param {ApiCallback} callback body gets a list of deployments
  */
 DeploymentsClient.prototype.list = function( _include, callback ){
-    logger.trace('lising deployments');
+    logger.trace('listing deployments');
     var qs = {};
 
     if ( !!_include ){
