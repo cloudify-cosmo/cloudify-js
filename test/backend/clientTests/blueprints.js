@@ -20,7 +20,7 @@ describe('blueprints:', function(){
         });
 
         it('should delete a blueprint', function(done){
-            testClient.blueprints.delete(blueprintName,null, function( err, response, body){
+            testClient.blueprints.delete(blueprintName, function( err, response, body){
                 expect(body.id).to.be(blueprintName);
                 done();
             });
