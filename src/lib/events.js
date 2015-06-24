@@ -67,7 +67,7 @@ EventsClient.prototype.get = function( execution_id, from_event, batch_size, inc
         qs.size = 100;
     }
 
-    this.query( qs , callback );
+    return this.query( qs , callback );
 };
 
 /**
