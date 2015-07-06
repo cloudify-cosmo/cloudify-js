@@ -123,7 +123,7 @@ module.exports = function (grunt) {
         },
         karma: {
             debug: {
-                configFile: 'karma.vanilla.conf.js',
+                configFile: 'karma.angular.conf.js',
                 singleRun:false
             },
             unit: {

@@ -136,14 +136,22 @@ EventsClient.prototype.query = function( query , callback ){
             'method' : 'POST',
             'url' : this.config.endpoint + '/events',
             'json':true,
-            'headers' : { // https://cloudifysource.atlassian.net/browse/CFY-2996
-                'Content-Type' : 'application/json'
-            },
+
+            // we recommend the following algorithm to know if you need Content-Type: application/json
+            // if json: true ==> set header Content-Type application/json.
+            // you should not rely on overriding the header as the github issue below specified so.
+
+            // https://github.com/iriscouch/browser-request/issues/54
+
+            //'headers' : { // https://cloudifysource.atlassian.net/browse/CFY-2996
+            //    'Content-Type' : 'application/json'
+            //},
             'body': query
 
         },
         function( err, response/*, body*/ ){
 
+            console.log(response);
             if ( !!response && !!response.body ){
                 response.body = {
                     'total_events' :  response.body.hits.total,

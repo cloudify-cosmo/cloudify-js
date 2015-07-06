@@ -246,6 +246,16 @@ DeploymentsClient.prototype.create = function( blueprint_id, deployment_id, inpu
     return this.config.request(
         {
             'method' : 'PUT',
+
+            // we recommend the following algorithm to know if you need Content-Type: application/json
+            // if json: true ==> set header Content-Type application/json.
+            // you should not rely on overriding the header as the github issue below specified so.
+
+            // https://github.com/iriscouch/browser-request/issues/54
+
+            //'headers' : { // https://cloudifysource.atlassian.net/browse/CFY-2996
+            //    'Content-Type' : 'application/json'
+            //},
             'json' : true,
             'url' : String.format( this.config.endpoint + '/deployments/{0}', deployment_id ),
             'body' : body

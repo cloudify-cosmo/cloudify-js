@@ -43,6 +43,8 @@ module.exports = function(config) {
             transform: []
         },
 
+        browserNoActivityTimeout : 60000, //default 10000
+
         plugins: [
             'karma-chrome-launcher',
             'karma-phantomjs-launcher',
