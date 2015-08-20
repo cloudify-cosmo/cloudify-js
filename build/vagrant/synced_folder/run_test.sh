@@ -31,6 +31,9 @@ if [ "$TEST_TYPE" = "" ];then
 fi
 echo "TEST_TYPE is $TEST_TYPE"
 
+
+export REPORTS_BASE=`echo ~`/reports
+
 grunt # first build the dist files
 grunt $TEST_TYPE
 
