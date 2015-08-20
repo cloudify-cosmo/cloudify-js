@@ -10,6 +10,7 @@ module.exports = function (grunt) {
 
     // Project configuration.
     grunt.initConfig({
+        reportsBase: process.env.REPORTS_BASE || 'reports',
         distDir: 'dist',
         destDir: '<%= distDir %>',
         year: new Date().getFullYear(),
@@ -124,23 +125,28 @@ module.exports = function (grunt) {
         karma: {
             debug: {
                 configFile: 'karma.angular.conf.js',
-                singleRun:false
+                singleRun:false,
+                junitReporter: { outputFile: '<%= reportsBase %>/debug-test-result.xml' }
             },
             unit: {
                 configFile: 'karma.vanilla.conf.js',
-                singleRun: true
+                singleRun: true,
+                junitReporter: { outputFile: '<%= reportsBase %>/unit-test-result.xml' }
             },
             vanilla: {
                 configFile: 'karma.vanilla.conf.js',
-                singleRun: true
+                singleRun: true,
+                junitReporter: { outputFile: '<%= reportsBase %>/vanilla-test-result.xml' }
             },
             jquery: {
                 configFile: 'karma.jquery.conf.js',
-                singleRun: true
+                singleRun: true,
+                junitReporter: { outputFile: '<%= reportsBase %>/jquery-test-result.xml' }
             },
             angular: {
                 configFile: 'karma.angular.conf.js',
-                singleRun: true
+                singleRun: true,
+                junitReporter: { outputFile: '<%= reportsBase %>/angular-test-result.xml' }
             }
         }
     });
