@@ -23,20 +23,36 @@ EventsClient._create_events_query = function ( opts ) {
     }
 
     var query = {
-        'bool': {
-            'must': [
-
-            ]
+        'query': {
+            'bool': {
+                'must': []
+            }
         }
     };
 
+    if(!!opts.from){
+        query.from = opts.from;
+    }
+
+    if(!!opts.size){
+        query.size = opts.size;
+    }
+
+    if(!!opts.sort){
+        query.sort = [];
+        var sortObj = {},
+            sortField = opts.sort.field,
+            sortOrder = opts.sort.order;
+        sortObj[sortField] = { order : sortOrder};
+        query.sort.push(sortObj);
+    }
 
     if ( !!opts.execution_id ){
-        query.bool.must.push({'match': {'context.execution_id': opts.execution_id}});
+        query.query.bool.must.push({'match': {'context.execution_id': opts.execution_id}});
     }
 
     if ( !!opts.deployment_id ){
-        query.bool.must.push({'match': {'context.deployment_id': opts.deployment_id}});
+        query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_id}});
     }
 
 
@@ -46,11 +62,11 @@ EventsClient._create_events_query = function ( opts ) {
     if (opts.include_logs) {
         match_cloudify_log = {'match': {'type': 'cloudify_log'}};
 
-        query.bool.should = [
+        query.query.bool.should = [
             match_cloudify_event, match_cloudify_log
         ];
     } else {
-        query.bool.must.push(match_cloudify_event);
+        query.query.bool.must.push(match_cloudify_event);
     }
 
     return query;
