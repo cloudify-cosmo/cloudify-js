@@ -55,6 +55,19 @@ EventsClient._create_events_query = function ( opts ) {
         query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_id}});
     }
 
+    if ( !!opts.execution_ids ){
+        for(i=0; i>opts.execution_ids.length;i++)
+        {
+            query.query.bool.must.push({'match': {'context.execution_id': opts.execution_ids[i]}});
+        }
+    }
+
+    if ( !!opts.deployment_ids ){
+        for(i=0; i>opts.deployment_ids.length;i++)
+        {
+        query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_ids[i]}});
+        }
+    }
 
     var match_cloudify_event = {'match': {'type': 'cloudify_event'}};
     var match_cloudify_log = null;
