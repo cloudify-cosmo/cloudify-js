@@ -23,11 +23,11 @@ EventsClient._create_events_query = function ( opts ) {
     }
 
     var query = {
-        'query': {
-            'bool': {
-                'must': []
-            }
-        }
+        //'query': {
+        //    'bool': {
+        //        'must': []
+        //    }
+        //}
     };
 
     if(!!opts.from){
