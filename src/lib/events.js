@@ -2,7 +2,6 @@
 
 
 var logger = require('log4js').getLogger('cloudify.events');
-var _ = require('lodash');
 
 /**
  * @description
@@ -17,17 +16,19 @@ function EventsClient( config ){
 }
 
 EventsClient._create_events_query = function ( opts ) {
+    var i;
 
     if ( !opts ){
         opts = {};
     }
 
     var query = {
-        //'query': {
-        //    'bool': {
-        //        'must': []
-        //    }
-        //}
+        'query': {
+            'bool': {
+                'must': [],
+                'should': []
+            }
+        }
     };
 
     if(!!opts.from){
@@ -47,6 +48,24 @@ EventsClient._create_events_query = function ( opts ) {
         query.sort.push(sortObj);
     }
 
+    if(!!opts.searches){
+        for( i = 0; i<opts.searches.length;i++){
+            if(opts.searches[i].predicate){
+                if(opts.searches[i].matchAny){
+                    var mustArray = query.query.bool.must;
+                    mustArray.push({'terms': {}});
+                    mustArray[mustArray.length -1].terms[opts.searches[i].predicate] = opts.searches[i].matchAny;
+                }
+                if(opts.searches[i].gte){
+
+                }
+                if(opts.searches[i].lte){
+
+                }
+            }
+        }
+    }
+
     if ( !!opts.execution_id ){
         query.query.bool.must.push({'match': {'context.execution_id': opts.execution_id}});
     }
@@ -54,18 +73,17 @@ EventsClient._create_events_query = function ( opts ) {
     if ( !!opts.deployment_id ){
         query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_id}});
     }
-
     if ( !!opts.execution_ids ){
-        for(i=0; i>opts.execution_ids.length;i++)
+        for( i=0; i>opts.execution_ids.length;i++)
         {
             query.query.bool.must.push({'match': {'context.execution_id': opts.execution_ids[i]}});
         }
     }
 
     if ( !!opts.deployment_ids ){
-        for(i=0; i>opts.deployment_ids.length;i++)
+        for( i=0; i>opts.deployment_ids.length;i++)
         {
-        query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_ids[i]}});
+            query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_ids[i]}});
         }
     }
 
@@ -105,47 +123,12 @@ EventsClient._create_events_query = function ( opts ) {
 EventsClient.prototype.get = function( opts, callback ){
     logger.trace('getting events');
 
-    // initialize order defaults
-    opts = _.merge({
-        order: 'asc',
-        include_logs: false,
-        from_event: 0,
-        batch_size:100
-
-    }, opts);
-
-    // initialize rest of defaults. had to initialize order first in order to use it here.
-    opts = _.merge({
-        sort: [ {'@timestamp' : { 'order' : opts.order } } ]
-    }, opts);
-
-
-
     if (typeof(opts) === 'function' ){ // backward compatibility
         callback = opts;
         opts = {};
     }
 
-
-
-    var qs = {
-        'sort' : opts.sort,
-        'query' : EventsClient._create_events_query( opts )
-    };
-
-    if ( !isNaN(parseInt(opts.from_event,10)) ){
-        qs.from = opts.from_event;
-    }else{
-        qs.from = 0;
-    }
-
-    if ( !isNaN(parseInt(opts.batch_size), 10 ) ){
-        qs.size = opts.batch_size;
-    }else{
-        qs.size = 100;
-    }
-
-    return this.query( qs , callback );
+    return EventsClient.query.apply(this,[EventsClient._create_events_query( opts ), callback]);
 };
 
 /**
@@ -153,7 +136,7 @@ EventsClient.prototype.get = function( opts, callback ){
  * same as get, but only gets a query object instead of constructing the query himself.
  *
  */
-EventsClient.prototype.query = function( query , callback ){
+EventsClient.query = function( query , callback ){
     logger.trace('getting events');
 
     if ( !callback ){
@@ -180,7 +163,6 @@ EventsClient.prototype.query = function( query , callback ){
         },
         function( err, response/*, body*/ ){
 
-            console.log(response);
             if ( !!response && !!response.body ){
                 response.body = {
                     'total_events' :  response.body.hits.total,
