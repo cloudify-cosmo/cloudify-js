@@ -25,14 +25,14 @@ fi
 
 if [ ! -f /usr/bin/git ]; then
     echo "installing git"
-    sudo apt-get install -y git
+    sudo yum install -y git
 else
     echo "git already installed"
 fi
 
 if [ ! -f /usr/bin/java ]; then
     echo "installing java"
-    sudo apt-get install -y openjdk-7-jre-headless
+    sudo yum install -y openjdk-7-jre-headless
 else
     echo "java already installed"
 fi
