@@ -32,7 +32,8 @@ fi
 
 if [ ! -f /usr/bin/java ]; then
     echo "installing java"
-    sudo yum install -y openjdk-7-jre-headless
+    sudo yum install java-1.7.0-openjdk
+#    sudo apt-get install -y openjdk-7-jre-headless
 else
     echo "java already installed"
 fi
