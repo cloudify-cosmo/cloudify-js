@@ -6213,7 +6213,6 @@ module.exports = EvaluateClient;
 
 
 var logger = require('log4js').getLogger('cloudify.events');
-//var _ = require('lodash');
 
 /**
  * @description
@@ -6266,9 +6265,13 @@ EventsClient._create_events_query = function ( opts ) {
                 if(opts.searches[i].matchAny){
                     var mustArray = query.query.bool.must;
                     mustArray.push({'terms': {}});
-                    //for(var j = 0 ; j < opts.searches[i].matchAny.length; j++){
                     mustArray[mustArray.length -1].terms[opts.searches[i].predicate] = opts.searches[i].matchAny;
-                    //}
+                }
+                if(opts.searches[i].gte){
+
+                }
+                if(opts.searches[i].lte){
+
                 }
             }
         }
@@ -6301,8 +6304,9 @@ EventsClient._create_events_query = function ( opts ) {
     if (opts.include_logs) {
         match_cloudify_log = {'match': {'type': 'cloudify_log'}};
 
-        query.query.bool.should.push(match_cloudify_event);
-        query.query.bool.should.push(match_cloudify_log);
+        query.query.bool.should = [
+            match_cloudify_event, match_cloudify_log
+        ];
     } else {
         query.query.bool.must.push(match_cloudify_event);
     }
@@ -6330,48 +6334,12 @@ EventsClient._create_events_query = function ( opts ) {
 EventsClient.prototype.get = function( opts, callback ){
     logger.trace('getting events');
 
-    // initialize order defaults
-    //opts = _.merge({
-    //    order: 'asc',
-    //    include_logs: false,
-    //    from_event: 0,
-    //    batch_size:100
-    //
-    //}, opts);
-    //
-    //// initialize rest of defaults. had to initialize order first in order to use it here.
-    //opts = _.merge({
-    //    sort: [ {'@timestamp' : { 'order' : opts.order } } ]
-    //}, opts);
-    //
-
-
     if (typeof(opts) === 'function' ){ // backward compatibility
         callback = opts;
         opts = {};
     }
 
     return EventsClient.query.apply(this,[EventsClient._create_events_query( opts ), callback]);
-
-
-    //var qs = {
-    //    'sort' : opts.sort,
-    //    'query' : EventsClient._create_events_query( opts )
-    //};
-    //
-    //if ( !isNaN(parseInt(opts.from_event,10)) ){
-    //    qs.from = opts.from_event;
-    //}else{
-    //    qs.from = 0;
-    //}
-    //
-    //if ( !isNaN(parseInt(opts.batch_size), 10 ) ){
-    //    qs.size = opts.batch_size;
-    //}else{
-    //    qs.size = 100;
-    //}
-
-    //return this.query( qs , callback );
 };
 
 /**
@@ -6381,7 +6349,6 @@ EventsClient.prototype.get = function( opts, callback ){
  */
 EventsClient.query = function( query , callback ){
     logger.trace('getting events');
-    console.log(query);
 
     if ( !callback ){
         callback = function(){};
@@ -6407,7 +6374,6 @@ EventsClient.query = function( query , callback ){
         },
         function( err, response/*, body*/ ){
 
-            //console.log(response);
             if ( !!response && !!response.body ){
                 response.body = {
                     'total_events' :  response.body.hits.total,
