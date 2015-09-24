@@ -17,6 +17,7 @@ sudo npm install -g bower
 bower install --config.interactive=false
 
 export PROTRACTOR_BASE_URL=http://localhost
+export BROWSER_TYPE=PhantomJS
 
 echo "uploading blueprints and creating deployments for cloudify-js tests"
 echo "virtual env folder is: [$SYSTEM_TESTS_VIRTUAL_ENV]"
