@@ -23,6 +23,8 @@ else
     echo "node already installed"
 fi
 
+sudo yum install -y bzip2 # for phantomjs https://github.com/Medium/phantomjs/issues/92
+
 if [ ! -f /usr/bin/git ]; then
     echo "installing git"
     sudo yum install -y git
@@ -40,7 +42,7 @@ fi
 
 if [ ! -f /usr/bin/grunt ]; then
     echo "installing grunt and phantom"
-    sudo npm install -g grunt-cli # phantomjs
+    sudo npm install -g grunt-cli phantomjs
 
 else
     echo "grunt and phantom already installed"
