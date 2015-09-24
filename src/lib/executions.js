@@ -30,28 +30,23 @@ function ExecutionsClient( config ){
  *
  * @description
  * returns a list of executions
- * @param {string|null} [deployment_id] optional deployment id to get executions for.
- * @param {IncludeParam|null} [_include] list of fields to include in response.
+ * @param {object} opts
+ *        you can put any allowed filter on this object.
+ *        to see a list of fields allowed, read
+ *        <a href="https://github.com/cloudify-cosmo/cloudify-manager/blob/master/rest-service/manager_rest/models.py"> class Execution fields property </a>
+ * @param {IncludeParam} opts._include a csv list of included fields in response
  * @param {ApiCallback} callback body gets executions list
  */
-ExecutionsClient.prototype.list = function( deployment_id, _include, callback  ){
+ExecutionsClient.prototype.list = function( opts, callback  ){
+
     logger.trace('listing executions');
-    var qs = {};
-
-    if ( deployment_id ){
-        qs.deployment_id = deployment_id;
-    }
-
-    if ( _include ){
-        qs._include = _include;
-    }
 
     return this.config.request(
         {
             'method' : 'GET',
             'json': true,
             'url' : this.config.endpoint + '/executions',
-            qs:qs
+            qs:opts
         },
         callback
     );
