@@ -2,7 +2,7 @@ set -e
 set -v
 
 cd /vagrant
-sudo yum update -y
+# sudo yum update -y
 echo "instlalling prerequisites"
 ./install_prereq.sh
 
