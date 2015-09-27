@@ -159,16 +159,11 @@ module.exports = function (grunt) {
 
 
     grunt.registerTask('test', [
-        'jshint',
-        'browserify',
-        'karma:jquery'
-    ]);
-
-    grunt.registerTask('mocha', [
-        'jshint',
-        'browserify',
+        'karma',
         'mochaTest'
     ]);
+
+
 
     grunt.registerTask('build', [
         'jshint',
@@ -179,6 +174,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', [
         'jshint',
+        'browserify',
         //'test',
         'build'
     ]);

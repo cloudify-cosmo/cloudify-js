@@ -16,7 +16,7 @@ npm install
 sudo npm install -g bower
 bower install --config.interactive=false
 
-export PROTRACTOR_BASE_URL="http://localhost"
+
 export TEST_BROWSER="PhantomJS"
 
 echo "browser type is $BROWSER_TYPE"

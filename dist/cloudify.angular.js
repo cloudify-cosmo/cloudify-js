@@ -17553,7 +17553,7 @@ NodesClient.prototype.list = function( deployment_id, node_id, _include , callba
     }
 
     if ( node_id ){
-        qs.node_id = node_id;
+        qs.id = node_id;
     }
 
     return this.config.request(
