@@ -16,8 +16,8 @@ npm install
 sudo npm install -g bower
 bower install --config.interactive=false
 
-export PROTRACTOR_BASE_URL=http://localhost
-export BROWSER_TYPE=PhantomJS
+export PROTRACTOR_BASE_URL="http://localhost"
+export BROWSER_TYPE="PhantomJS"
 
 echo "browser type is $BROWSER_TYPE"
 echo "uploading blueprints and creating deployments for cloudify-js tests"
@@ -29,7 +29,7 @@ cfy deployments create -b HelloWorld -d HelloWorld
 cfy deployments create -b nodecellar -d nodecellar --inputs test/resources/cloudify-nodecellar-example-inputs.yaml
 
 if [ "$TEST_TYPE" = "" ];then
-    TEST_TYPE="mochaTest"
+    TEST_TYPE="test mochaTest"
 fi
 echo "TEST_TYPE is $TEST_TYPE"
 
