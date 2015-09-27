@@ -17,7 +17,7 @@ sudo npm install -g bower
 bower install --config.interactive=false
 
 export PROTRACTOR_BASE_URL="http://localhost"
-export BROWSER_TYPE="PhantomJS"
+export TEST_BROWSER="PhantomJS"
 
 echo "browser type is $BROWSER_TYPE"
 echo "uploading blueprints and creating deployments for cloudify-js tests"
