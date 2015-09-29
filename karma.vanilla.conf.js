@@ -22,6 +22,7 @@ module.exports = function(config) {
         },
 
         reporters: ['junit','spec','failed'],
+        timeout: 40000,
 
         port: 9876,
 

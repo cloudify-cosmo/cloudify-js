@@ -44,6 +44,7 @@ module.exports = function(config) {
         },
 
         browserNoActivityTimeout : 60000, //default 10000
+        timeout: 40000,
 
         plugins: [
             'karma-chrome-launcher',
