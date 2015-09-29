@@ -10,7 +10,6 @@ describe('blueprints:', function(){
 
     describe('upload & delete', function(){
         it('should upload archive', function(done){
-            this.timeout(10000);
             // we will use the archive api to upload a new blueprint
             testClient.blueprints.publish_archive( 'https://github.com/cloudify-cosmo/cloudify-nodecellar-example/archive/3.2.zip', blueprintName, 'local-blueprint.yaml', function(err, response, body){
                 console.log('this is error,  body', err, body);
