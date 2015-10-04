@@ -117,7 +117,7 @@ module.exports = function (grunt) {
                     captureFile: 'results.txt', // Optionally capture the reporter output to a file
                     quiet: false, // Optionally suppress output to standard out (defaults to false)
                     clearRequireCache: false, // Optionally clear the require cache before running tests (defaults to false)
-                    timeout: 20000
+                    timeout: 40000
                 },
                 src: ['test/backend/client.node.spec.js']
             }
@@ -159,16 +159,11 @@ module.exports = function (grunt) {
 
 
     grunt.registerTask('test', [
-        'jshint',
-        'browserify',
-        'karma:jquery'
-    ]);
-
-    grunt.registerTask('mocha', [
-        'jshint',
-        'browserify',
+        'karma',
         'mochaTest'
     ]);
+
+
 
     grunt.registerTask('build', [
         'jshint',
@@ -179,6 +174,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', [
         'jshint',
+        'browserify',
         //'test',
         'build'
     ]);

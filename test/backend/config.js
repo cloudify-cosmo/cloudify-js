@@ -5,7 +5,7 @@ if ( typeof(window) !== 'undefined' ){
     module.exports = { 'endpoint' : 'http://localhost:9876/cloudify-api' }; // points to karma proxy
 
 }else{
-    module.exports = { 'endpoint' :  process.env.TEST_ENDPOINT || 'http://localhost' }; // point directly to localhost manager
+    module.exports = { 'endpoint' :  process.env.CLIENT_ENDPOINT || 'http://localhost/api/v2' }; // point directly to localhost manager
 }
 
 try{ // for development purposes allow this code to run. put the file under 'dev'

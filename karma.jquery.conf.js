@@ -16,13 +16,14 @@ module.exports = function(config) {
 
         exclude: [],
         proxies:{
-            '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost'
+            '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost/api/v2'
         },
         preprocessors: {
             'test/backend/client.jquery.spec.js': ['browserify']
         },
 
         reporters: ['junit','spec','failed'],
+        timeout: 40000,
 
         port: 9876,
 

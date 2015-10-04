@@ -23,16 +23,19 @@ else
     echo "node already installed"
 fi
 
+sudo yum install -y bzip2 # for phantomjs https://github.com/Medium/phantomjs/issues/92
+
 if [ ! -f /usr/bin/git ]; then
     echo "installing git"
-    sudo apt-get install -y git
+    sudo yum install -y git
 else
     echo "git already installed"
 fi
 
 if [ ! -f /usr/bin/java ]; then
     echo "installing java"
-    sudo apt-get install -y openjdk-7-jre-headless
+    sudo yum install -y java-1.7.0-openjdk
+#    sudo apt-get install -y openjdk-7-jre-headless
 else
     echo "java already installed"
 fi

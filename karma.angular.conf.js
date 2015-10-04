@@ -20,7 +20,7 @@ module.exports = function(config) {
         exclude: [],
 
         proxies:{
-          '/cloudify-api' : process.env.TEST_ENDPOINT || 'http://localhost'
+          '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost/api/v2'
         },
         preprocessors: {
             'test/backend/client.angular.spec.js': ['browserify']
@@ -44,6 +44,7 @@ module.exports = function(config) {
         },
 
         browserNoActivityTimeout : 60000, //default 10000
+        timeout: 40000,
 
         plugins: [
             'karma-chrome-launcher',
