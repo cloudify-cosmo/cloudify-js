@@ -2,7 +2,6 @@
 
 
 var logger = require('log4js').getLogger('cloudify.events');
-var _ = require('lodash');
 
 /**
  * @description
@@ -17,28 +16,76 @@ function EventsClient( config ){
 }
 
 EventsClient._create_events_query = function ( opts ) {
+    var i;
 
     if ( !opts ){
         opts = {};
     }
 
     var query = {
-        'bool': {
-            'must': [
-
-            ]
+        'query': {
+            'bool': {
+                'must': [],
+                'should': []
+            }
         }
     };
 
+    if(!!opts.from){
+        query.from = opts.from;
+    }
+
+    if(!!opts.size){
+        query.size = opts.size;
+    }
+
+    if(!!opts.sort){
+        query.sort = [];
+        var sortObj = {},
+            sortField = opts.sort.field,
+            sortOrder = opts.sort.order;
+        sortObj[sortField] = { order : sortOrder};
+        query.sort.push(sortObj);
+    }
+
+    if(!!opts.searches){
+        for( i = 0; i<opts.searches.length;i++){
+            if(opts.searches[i].predicate){
+                if(opts.searches[i].matchAny){
+                    var mustArray = query.query.bool.must;
+                    mustArray.push({'terms': {}});
+                    mustArray[mustArray.length -1].terms[opts.searches[i].predicate] = opts.searches[i].matchAny;
+                }
+                if(opts.searches[i].gte){
+
+                }
+                if(opts.searches[i].lte){
+
+                }
+            }
+        }
+    }
 
     if ( !!opts.execution_id ){
-        query.bool.must.push({'match': {'context.execution_id': opts.execution_id}});
+        query.query.bool.must.push({'match': {'context.execution_id': opts.execution_id}});
     }
 
     if ( !!opts.deployment_id ){
-        query.bool.must.push({'match': {'context.deployment_id': opts.deployment_id}});
+        query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_id}});
+    }
+    if ( !!opts.execution_ids ){
+        for( i=0; i>opts.execution_ids.length;i++)
+        {
+            query.query.bool.must.push({'match': {'context.execution_id': opts.execution_ids[i]}});
+        }
     }
 
+    if ( !!opts.deployment_ids ){
+        for( i=0; i>opts.deployment_ids.length;i++)
+        {
+            query.query.bool.must.push({'match': {'context.deployment_id': opts.deployment_ids[i]}});
+        }
+    }
 
     var match_cloudify_event = {'match': {'type': 'cloudify_event'}};
     var match_cloudify_log = null;
@@ -46,11 +93,11 @@ EventsClient._create_events_query = function ( opts ) {
     if (opts.include_logs) {
         match_cloudify_log = {'match': {'type': 'cloudify_log'}};
 
-        query.bool.should = [
+        query.query.bool.should = [
             match_cloudify_event, match_cloudify_log
         ];
     } else {
-        query.bool.must.push(match_cloudify_event);
+        query.query.bool.must.push(match_cloudify_event);
     }
 
     return query;
@@ -76,47 +123,12 @@ EventsClient._create_events_query = function ( opts ) {
 EventsClient.prototype.get = function( opts, callback ){
     logger.trace('getting events');
 
-    // initialize order defaults
-    opts = _.merge({
-        order: 'asc',
-        include_logs: false,
-        from_event: 0,
-        batch_size:100
-
-    }, opts);
-
-    // initialize rest of defaults. had to initialize order first in order to use it here.
-    opts = _.merge({
-        sort: [ {'@timestamp' : { 'order' : opts.order } } ]
-    }, opts);
-
-
-
     if (typeof(opts) === 'function' ){ // backward compatibility
         callback = opts;
         opts = {};
     }
 
-
-
-    var qs = {
-        'sort' : opts.sort,
-        'query' : EventsClient._create_events_query( opts )
-    };
-
-    if ( !isNaN(parseInt(opts.from_event,10)) ){
-        qs.from = opts.from_event;
-    }else{
-        qs.from = 0;
-    }
-
-    if ( !isNaN(parseInt(opts.batch_size), 10 ) ){
-        qs.size = opts.batch_size;
-    }else{
-        qs.size = 100;
-    }
-
-    return this.query( qs , callback );
+    return EventsClient.query.apply(this,[EventsClient._create_events_query( opts ), callback]);
 };
 
 /**
@@ -124,7 +136,7 @@ EventsClient.prototype.get = function( opts, callback ){
  * same as get, but only gets a query object instead of constructing the query himself.
  *
  */
-EventsClient.prototype.query = function( query , callback ){
+EventsClient.query = function( query , callback ){
     logger.trace('getting events');
 
     if ( !callback ){
@@ -151,7 +163,6 @@ EventsClient.prototype.query = function( query , callback ){
         },
         function( err, response/*, body*/ ){
 
-            console.log(response);
             if ( !!response && !!response.body ){
                 response.body = {
                     'total_events' :  response.body.hits.total,
