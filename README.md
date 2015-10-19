@@ -26,7 +26,7 @@ You can have a look at the [test/examples](test/exmaple) folder for an example f
 ### In nodejs
 
 ```
-npm install --save cloudify-js
+npm install --save cloudify-cosmo/cloudify-js
 ```
 
 ```javascript
@@ -59,7 +59,7 @@ bower install --save cloudify-cosmo/cloudify-js
 ### In Angular
 
 ```
-bower intall --save cloudify-js
+bower intall --save cloudify-cosmo/cloudify-js
 ```
 
 
