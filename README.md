@@ -43,7 +43,7 @@ client.blueprints.list(null, function( err, response, body){
 ### In Vanilla Javascript
 
 ```
-bower install --save cloudify-js
+bower install --save cloudify-cosmo/cloudify-js
 ```
 
 ```html
@@ -80,7 +80,7 @@ bower intall --save cloudify-js
 ### In JQuery
 
 ```
-bower install --save cloudify-js
+bower install --save cloudify-cosmo/cloudify-js
 ```
 
 ```html
