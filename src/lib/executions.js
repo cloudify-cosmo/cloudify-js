@@ -30,8 +30,11 @@ function ExecutionsClient( config ){
  *
  * @description
  * returns a list of executions
- * @param opts object containing deployment_id (optional), _include (list of fields to include in response)
- * and filtering fields e.g. status: ['pending', 'started']
+ * @param {object} opts
+ * @param {string} opts._include - list of fields to include in response
+ * @param {string} opts.deployment_id - id of the deployment, leave null to get executions of all deployments
+ * @param {Array} opts.status - optional Array of statuses of executions to be listed, e.g. ['pending', 'started']
+ *
  * @param {ApiCallback} callback body gets executions list
  */
 ExecutionsClient.prototype.list = function( opts, callback  ){
