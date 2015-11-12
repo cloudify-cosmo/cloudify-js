@@ -2389,6 +2389,9 @@ module.exports = {
   patternLayout: patternLayout, 
   colouredLayout: colouredLayout, 
   coloredLayout: colouredLayout, 
+  addLayout: function(name, serializerGenerator) {
+    layoutMakers[name] = serializerGenerator;
+  },
   layout: function(name, config) {
     return layoutMakers[name] && layoutMakers[name](config);
   }
@@ -6269,28 +6272,22 @@ function ExecutionsClient( config ){
  *
  * @description
  * returns a list of executions
- * @param {string|null} [deployment_id] optional deployment id to get executions for.
- * @param {IncludeParam|null} [_include] list of fields to include in response.
+ * @param {object} opts
+ * @param {string} opts._include - list of fields to include in response
+ * @param {string} opts.deployment_id - id of the deployment, leave null to get executions of all deployments
+ * @param {Array} opts.status - optional Array of statuses of executions to be listed, e.g. ['pending', 'started']
+ *
  * @param {ApiCallback} callback body gets executions list
  */
-ExecutionsClient.prototype.list = function( deployment_id, _include, callback  ){
+ExecutionsClient.prototype.list = function( opts, callback  ){
     logger.trace('listing executions');
-    var qs = {};
-
-    if ( deployment_id ){
-        qs.deployment_id = deployment_id;
-    }
-
-    if ( _include ){
-        qs._include = _include;
-    }
 
     return this.config.request(
         {
             'method' : 'GET',
             'json': true,
             'url' : this.config.endpoint + '/executions',
-            qs:qs
+            'qs': $.extend({deployment_id: null}, opts)
         },
         callback
     );
