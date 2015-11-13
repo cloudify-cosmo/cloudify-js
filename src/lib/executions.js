@@ -45,7 +45,7 @@ ExecutionsClient.prototype.list = function( opts, callback  ){
             'method' : 'GET',
             'json': true,
             'url' : this.config.endpoint + '/executions',
-            qs:opts
+            'qs': $.extend({deployment_id: null}, opts)
         },
         callback
     );
