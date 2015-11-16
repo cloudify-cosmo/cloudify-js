@@ -159,7 +159,10 @@ module.exports = function (grunt) {
 
 
     grunt.registerTask('test', [
-        'karma',
+        'karma:unit',
+        'karma:vanilla',
+        'karma:jquery',
+        'karma:angular',
         'mochaTest'
     ]);
 
