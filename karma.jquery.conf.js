@@ -35,6 +35,16 @@ module.exports = function(config) {
 
         browsers: [process.env.TEST_BROWSER || 'Chrome'],
 
+        customLaunchers: {
+            PhantomJS_noSecurity: {
+                base: 'PhantomJS',
+                flags: [
+                    '--web-security=false',
+                    '--ignore-ssl-errors=true'
+                ]
+            }
+        },
+
         browserify: {
             debug: true,
             transform: []

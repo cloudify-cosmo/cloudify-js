@@ -7,7 +7,7 @@ describe('nodeInstances:', function () {
 
     it('should list deployment nodes instances', function (done) {
         testClient.deployments.list(null,  function( err, response, body ){
-            var depName = body[0].id;
+            var depName = body.items[0].id;
 
             console.log('depName is', depName);
 
@@ -15,7 +15,7 @@ describe('nodeInstances:', function () {
                 expect(body).to.be.ok();
                 expect(response.statusCode).to.be(200);
 
-                instances = body;
+                instances = body.items;
                 expect(instances).to.not.be.empty();
                 done();
 

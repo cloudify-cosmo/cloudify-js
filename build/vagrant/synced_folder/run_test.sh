@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 SYSTEM_TESTS_FOLDER=system-tests
 rm -rf $SYSTEM_TESTS_FOLDER || echo "folder does not exist"
@@ -19,7 +20,7 @@ bower install --config.interactive=false
 
 export TEST_BROWSER="PhantomJS"
 
-echo "browser type is $BROWSER_TYPE"
+echo "browser type is $TEST_BROWSER"
 echo "uploading blueprints and creating deployments for cloudify-js tests"
 echo "virtual env folder is: [$SYSTEM_TESTS_VIRTUAL_ENV]"
 source $SYSTEM_TESTS_VIRTUAL_ENV/bin/activate

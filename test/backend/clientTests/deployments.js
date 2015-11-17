@@ -28,7 +28,7 @@ describe('deployments:', function () {
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var deployments = body;
+            var deployments = body.items;
             expect(deployments).to.not.be.empty();
 
             var deployment = _.find(deployments, {'id': depName});

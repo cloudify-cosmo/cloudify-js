@@ -9,11 +9,13 @@ describe('executions:', function () {
     var execution;
 
     it('should list executions', function( done ){
-        testClient.executions.list(null, null, function(err, response, body){
+        testClient.executions.list({_include: 'id'}, function(err, response, body){
+
             expect(body).to.be.ok();
             expect(response.statusCode).to.be(200);
 
-            var executions = body;
+            var executions = body.items;
+
             expect(executions).to.not.be.empty();
 
             execution = executions[0]; // keep the first for another test
@@ -69,7 +71,6 @@ describe('executions:', function () {
         // cancel the nodecellar install workflow execution.
         testClient.executions.cancel(execution.id, true, function (err, response, body) {
             expect(body).to.be.ok();
-
 
             var possibleStatusCodes = [200,400];
 
