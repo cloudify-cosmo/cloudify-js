@@ -97,3 +97,8 @@ bower install --save cloudify-cosmo/cloudify-js
 
  * This project uses `request` and `browser-request` to get a unified API for ajax calls
  * This project uses `browserify` to build its front-end artifacts.
+
+# Tests
+
+To run the tests on existing cloudify manager, set CLIENT_ENDPOINT environment variable to manager's URL and run `grunt test`.  
+To run the tests using vagrant, go to build/vagrant and run `vagrant up`. The scripts will install cloudify-manager, create proper blueprints and deployments and run the tests automatically.

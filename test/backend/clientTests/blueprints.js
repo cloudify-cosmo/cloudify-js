@@ -35,7 +35,7 @@ describe('blueprints:', function(){
             expect(body).to.be.withMessage('body should exist').ok();
             expect(response.statusCode).to.be(200);
 
-            var blueprints = body;
+            var blueprints = body.items;
             expect(blueprints).to.not.be.empty();
 
             var blueprint = _.find(blueprints, {'id': 'HelloWorld'});
