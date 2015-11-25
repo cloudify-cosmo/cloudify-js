@@ -8,6 +8,6 @@ dependencies:
 
 test:
   pre:
-    - bowe install
+    - bower install
   override:
     - npm test
