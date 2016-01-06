@@ -1,6 +1,8 @@
 # cloudify-js
 node js client for the Cloudify REST API
 
+* Master [![Circle CI](https://circleci.com/gh/cloudify-cosmo/cloudify-js/tree/master.svg?style=shield)](https://circleci.com/gh/cloudify-cosmo/cloudify-js/tree/master)
+
 This library is still under development and is not production ready.
 
 # Description
