@@ -1,7 +1,7 @@
 {
   "name": "cloudify-js",
   "version": "0.0.0",
-  "description": "javascript client for cloudify-cosmo REST API",
+  "description": "javascript client for cloudify REST API",
   "main": "src/cloudify.js",
   "dependencies": {
     "log4js": "~0.6.22",
