@@ -1,5 +1,5 @@
 /*********
-* Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
+* Copyright (c) 2016 GigaSpaces Technologies Ltd. All rights reserved
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -5636,17 +5636,14 @@ function BlueprintsClient( config ){
  * @param {IncludeParam} [_include] list of fields to include in response
  * @param {ApiCallback} callback body gets a list of blueprints
  */
-BlueprintsClient.prototype.list = function( _include, callback ){
+BlueprintsClient.prototype.list = function( options, callback ){
     logger.trace('listing blueprints');
-    var qs = {};
-    if ( !!_include ){
-        qs._include = _include;
-    }
+
     return this.config.request( {
         'method' : 'GET',
         'json': true,
         'url' : this.config.endpoint + '/blueprints',
-        'qs' : qs
+        'qs' : options
     }, callback );
 };
 
