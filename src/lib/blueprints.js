@@ -25,17 +25,14 @@ function BlueprintsClient( config ){
  * @param {IncludeParam} [_include] list of fields to include in response
  * @param {ApiCallback} callback body gets a list of blueprints
  */
-BlueprintsClient.prototype.list = function( _include, callback ){
+BlueprintsClient.prototype.list = function( options, callback ){
     logger.trace('listing blueprints');
-    var qs = {};
-    if ( !!_include ){
-        qs._include = _include;
-    }
+
     return this.config.request( {
         'method' : 'GET',
         'json': true,
         'url' : this.config.endpoint + '/blueprints',
-        'qs' : qs
+        'qs' : options
     }, callback );
 };
 
