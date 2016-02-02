@@ -20,3 +20,10 @@ test:
     - bower install
   override:
     - npm test
+
+deployment:
+  release:
+    tag: /[0-9]+(\.[0-9]+)*/
+    owner: circleci
+    commands:
+      - "true" 
