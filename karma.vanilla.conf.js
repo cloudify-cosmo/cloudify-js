@@ -15,7 +15,7 @@ module.exports = function(config) {
 
         exclude: [],
         proxies:{
-            '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost/api/v2'
+            '/cloudify-api' : process.env.CLIENT_ENDPOINT || 'http://localhost/api/v2.1'
         },
         preprocessors: {
             'test/backend/client.vanilla.spec.js': ['browserify']

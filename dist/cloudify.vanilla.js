@@ -1,5 +1,5 @@
 /*********
-* Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
+* Copyright (c) 2016 GigaSpaces Technologies Ltd. All rights reserved
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -2389,9 +2389,6 @@ module.exports = {
   patternLayout: patternLayout, 
   colouredLayout: colouredLayout, 
   coloredLayout: colouredLayout, 
-  addLayout: function(name, serializerGenerator) {
-    layoutMakers[name] = serializerGenerator;
-  },
   layout: function(name, config) {
     return layoutMakers[name] && layoutMakers[name](config);
   }
@@ -5776,6 +5773,7 @@ var NodeInstances = require('./nodeInstances');
 var Nodes = require('./nodes');
 var Search = require('./search');
 var Evaluate = require('./evaluate');
+var Maintenance = require('./maintenance');
 /**
  *
  * @param {ClientConfig} config
@@ -5802,6 +5800,7 @@ function Client( config ){
     this.nodes = new Nodes( config );
     this.search = new Search( config );
     this.evaluate = new Evaluate( config );
+    this.maintenance = new Maintenance( config );
 }
 
 module.exports = Client;
@@ -5828,7 +5827,7 @@ String.format = function() {
 
     return theString;
 };
-},{"./blueprints":20,"./deployments":22,"./evaluate":23,"./events":24,"./executions":25,"./manager":26,"./nodeInstances":27,"./nodes":28,"./search":29}],22:[function(require,module,exports){
+},{"./blueprints":20,"./deployments":22,"./evaluate":23,"./events":24,"./executions":25,"./maintenance":26,"./manager":27,"./nodeInstances":28,"./nodes":29,"./search":30}],22:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.deployments');
@@ -6453,6 +6452,43 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
 module.exports = ExecutionsClient;
 },{"log4js":15}],26:[function(require,module,exports){
 'use strict';
+var logger = require('log4js').getLogger('cloudify.maintenance');
+
+
+function MaintenanceClient(config){
+    this.config = config;
+}
+
+MaintenanceClient.prototype.get = function(callback){
+    logger.trace('getting maintenance details');
+    return this.config.request( {
+        'method' : 'GET',
+        'json': true,
+        'url' : this.config.endpoint + '/maintenance'
+    }, callback );
+};
+
+MaintenanceClient.prototype.activate = function(callback){
+    logger.trace('activating maintenance mode');
+    return this.config.request( {
+        'method' : 'POST',
+        'json': true,
+        'url' : this.config.endpoint + '/maintenance/activate'
+    }, callback );
+};
+
+MaintenanceClient.prototype.deactivate = function(callback){
+    logger.trace('deactivating maintenance mode');
+    return this.config.request( {
+        'method' : 'POST',
+        'json': true,
+        'url' : this.config.endpoint + '/maintenance/deactivate'
+    }, callback );
+};
+
+module.exports = MaintenanceClient;
+},{"log4js":15}],27:[function(require,module,exports){
+'use strict';
 
 
 
@@ -6566,7 +6602,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
 
 
 module.exports = ManagerClient;
-},{"log4js":15}],27:[function(require,module,exports){
+},{"log4js":15}],28:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6702,7 +6738,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
 
 
 module.exports = NodeInstancesClient;
-},{"log4js":15}],28:[function(require,module,exports){
+},{"log4js":15}],29:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6797,7 +6833,7 @@ NodesClient.prototype.get = function( deployment_id, node_id, _include, callback
 
 module.exports = NodesClient;
 
-},{"log4js":15}],29:[function(require,module,exports){
+},{"log4js":15}],30:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
