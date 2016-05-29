@@ -22,6 +22,7 @@ var Nodes = require('./nodes');
 var Search = require('./search');
 var Evaluate = require('./evaluate');
 var Maintenance = require('./maintenance');
+var DeploymentUpdates = require('./deploymentUpdates');
 /**
  *
  * @param {ClientConfig} config
@@ -49,6 +50,7 @@ function Client( config ){
     this.search = new Search( config );
     this.evaluate = new Evaluate( config );
     this.maintenance = new Maintenance( config );
+    this.deploymentUpdates = new DeploymentUpdates( config );
 }
 
 module.exports = Client;

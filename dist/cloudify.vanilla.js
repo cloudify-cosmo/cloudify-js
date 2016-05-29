@@ -5774,6 +5774,7 @@ var Nodes = require('./nodes');
 var Search = require('./search');
 var Evaluate = require('./evaluate');
 var Maintenance = require('./maintenance');
+var DeploymentUpdates = require('./deploymentUpdates');
 /**
  *
  * @param {ClientConfig} config
@@ -5801,6 +5802,7 @@ function Client( config ){
     this.search = new Search( config );
     this.evaluate = new Evaluate( config );
     this.maintenance = new Maintenance( config );
+    this.deploymentUpdates = new DeploymentUpdates( config );
 }
 
 module.exports = Client;
@@ -5827,7 +5829,79 @@ String.format = function() {
 
     return theString;
 };
-},{"./blueprints":20,"./deployments":22,"./evaluate":23,"./events":24,"./executions":25,"./maintenance":26,"./manager":27,"./nodeInstances":28,"./nodes":29,"./search":30}],22:[function(require,module,exports){
+},{"./blueprints":20,"./deploymentUpdates":22,"./deployments":23,"./evaluate":24,"./events":25,"./executions":26,"./maintenance":27,"./manager":28,"./nodeInstances":29,"./nodes":30,"./search":31}],22:[function(require,module,exports){
+'use strict';
+var logger = require('log4js').getLogger('cloudify.deploymentUpdates');
+
+function DeploymentUpdatesClient( config ){
+    this.config = config;
+}
+
+DeploymentUpdatesClient.prototype.list = function(options, callback){
+    logger.trace('listing deployment updates');
+    return this.config.request({
+        'method': 'GET',
+        'json': true,
+        'url': this.config.endpoint + '/deployment-updates',
+        'qs': options
+    }, callback );
+};
+
+DeploymentUpdatesClient.prototype.get = function(updateId, callback){
+    logger.trace('getting deployment update '+updateId);
+    return this.config.request({
+        'method': 'GET',
+        'json': true,
+        'url': this.config.endpoint + '/deployment-updates/'+updateId
+    }, callback );
+};
+
+/**
+* @param {string} [deploymentId] deployment id to update
+* @param {object | string} [archive] the new deployment archive / url to archive
+* @param {string} [fileName] the blueprint.yaml file name within the archive
+* @param {object} [executionOptions] should run a custom exection?
+    * @param {string} [executionOptions.workflowId] the workflow id to execute on the changes
+    * @param {boolean} [executionOptions.skipInstall] should not install added
+    * @param {boolean} [executionOptions.skipUninstall] should not install removed
+*/
+DeploymentUpdatesClient.prototype.update = function (deploymentId, archive, inputs, fileName, executionOptions, callback) {
+    logger.trace('updating deployment '+deploymentId);
+    var json = true;
+    var qs = {};
+    var body = new FormData();
+    if(typeof archive === 'string'){
+        qs.blueprint_archive_url = archive;
+    } else if(archive !== undefined){
+        body.append('blueprint_archive', archive);
+        json = false;
+    }
+    if(inputs !== undefined){
+        body.append('inputs', inputs);
+        json = false;
+    }
+    qs.application_file_name = fileName !== undefined ? fileName : undefined;
+    if(typeof executionOptions === 'object'){
+        if(executionOptions.workflowId !== undefined){
+            qs.workflow_id = executionOptions.workflowId;
+        } else{
+            qs.skip_install = executionOptions.skipInstall;
+            qs.skip_uninstall = executionOptions.skipUninstall;
+        }
+    }
+
+    return this.config.request({
+        'method': 'POST',
+        'json': json,
+        'url': this.config.endpoint + '/deployment-updates/'+deploymentId+'/update',
+        'qs': qs,
+        'body': body
+    }, callback );
+};
+
+module.exports = DeploymentUpdatesClient;
+
+},{"log4js":15}],23:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.deployments');
@@ -6157,7 +6231,7 @@ DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, c
 
 
 module.exports = DeploymentsClient;
-},{"log4js":15}],23:[function(require,module,exports){
+},{"log4js":15}],24:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6210,7 +6284,7 @@ EvaluateClient.prototype.functions = function( deployment_id, context, payload, 
 
 module.exports = EvaluateClient;
 
-},{"log4js":15}],24:[function(require,module,exports){
+},{"log4js":15}],25:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.events');
 
@@ -6238,7 +6312,7 @@ EventsClient.prototype.get = function(options, callback){
 
 module.exports = EventsClient;
 
-},{"log4js":15}],25:[function(require,module,exports){
+},{"log4js":15}],26:[function(require,module,exports){
 'use strict';
 
 
@@ -6450,7 +6524,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
 
 
 module.exports = ExecutionsClient;
-},{"log4js":15}],26:[function(require,module,exports){
+},{"log4js":15}],27:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.maintenance');
 
@@ -6487,7 +6561,7 @@ MaintenanceClient.prototype.deactivate = function(callback){
 };
 
 module.exports = MaintenanceClient;
-},{"log4js":15}],27:[function(require,module,exports){
+},{"log4js":15}],28:[function(require,module,exports){
 'use strict';
 
 
@@ -6602,7 +6676,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
 
 
 module.exports = ManagerClient;
-},{"log4js":15}],28:[function(require,module,exports){
+},{"log4js":15}],29:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6738,7 +6812,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
 
 
 module.exports = NodeInstancesClient;
-},{"log4js":15}],29:[function(require,module,exports){
+},{"log4js":15}],30:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6833,7 +6907,7 @@ NodesClient.prototype.get = function( deployment_id, node_id, _include, callback
 
 module.exports = NodesClient;
 
-},{"log4js":15}],30:[function(require,module,exports){
+},{"log4js":15}],31:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');

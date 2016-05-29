@@ -26,8 +26,10 @@ echo "virtual env folder is: [$SYSTEM_TESTS_VIRTUAL_ENV]"
 source $SYSTEM_TESTS_VIRTUAL_ENV/bin/activate
 cfy blueprints publish-archive -l test/resources/testHelloWorld.tar.gz -b HelloWorld -n blueprint.yaml
 cfy blueprints publish-archive -l test/resources/cloudify-nodecellar-example.tar.gz -b nodecellar -n openstack-blueprint.yaml
+cfy blueprints publish-archive -l https://github.com/cloudify-cosmo/cloudify-nodecellar-example/archive/3.3.1.zip -b nodecellar_updated -n local-blueprint.yaml
 cfy deployments create -b HelloWorld -d HelloWorld
 cfy deployments create -b nodecellar -d nodecellar --inputs test/resources/cloudify-nodecellar-example-inputs.yaml
+cfy deployments create -b nodecellar_updated -d nodecellar_updated
 
 if [ "$TEST_TYPE" = "" ];then
     TEST_TYPE="test mochaTest"
