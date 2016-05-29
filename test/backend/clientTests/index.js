@@ -41,3 +41,4 @@ exports.nodeInstances = require('./nodeInstances.js');
 exports.nodes = require('./nodes.js');
 exports.testFlows = require('./testFlows.js');
 exports.maintenance = require('./maintenance.js');
+exports.deploymentUpdates = require('./deploymentUpdates.js');
