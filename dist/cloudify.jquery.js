@@ -842,6 +842,1386 @@ if (typeof Object.create === 'function') {
 }
 
 },{}],6:[function(require,module,exports){
+"use strict";
+var layouts = require('../layouts')
+, consoleLog = console.log.bind(console);
+
+function consoleAppender (layout, timezoneOffset) {
+  layout = layout || layouts.colouredLayout;
+  return function(loggingEvent) {
+    consoleLog(layout(loggingEvent, timezoneOffset));
+  };
+}
+
+function configure(config) {
+  var layout;
+  if (config.layout) {
+    layout = layouts.layout(config.layout.type, config.layout);
+  }
+  return consoleAppender(layout, config.timezoneOffset);
+}
+
+exports.appender = consoleAppender;
+exports.configure = configure;
+
+},{"../layouts":9}],7:[function(require,module,exports){
+"use strict";
+var levels = require("./levels");
+var DEFAULT_FORMAT = ':remote-addr - -' +
+  ' ":method :url HTTP/:http-version"' +
+  ' :status :content-length ":referrer"' +
+  ' ":user-agent"';
+/**
+ * Log requests with the given `options` or a `format` string.
+ *
+ * Options:
+ *
+ *   - `format`        Format string, see below for tokens
+ *   - `level`         A log4js levels instance. Supports also 'auto'
+ *
+ * Tokens:
+ *
+ *   - `:req[header]` ex: `:req[Accept]`
+ *   - `:res[header]` ex: `:res[Content-Length]`
+ *   - `:http-version`
+ *   - `:response-time`
+ *   - `:remote-addr`
+ *   - `:date`
+ *   - `:method`
+ *   - `:url`
+ *   - `:referrer`
+ *   - `:user-agent`
+ *   - `:status`
+ *
+ * @param {String|Function|Object} format or options
+ * @return {Function}
+ * @api public
+ */
+
+function getLogger(logger4js, options) {
+	if ('object' == typeof options) {
+		options = options || {};
+	} else if (options) {
+		options = { format: options };
+	} else {
+		options = {};
+	}
+
+	var thislogger = logger4js
+  , level = levels.toLevel(options.level, levels.INFO)
+  , fmt = options.format || DEFAULT_FORMAT
+  , nolog = options.nolog ? createNoLogCondition(options.nolog) : null;
+
+  return function (req, res, next) {
+    // mount safety
+    if (req._logging) return next();
+
+		// nologs
+		if (nolog && nolog.test(req.originalUrl)) return next();
+		if (thislogger.isLevelEnabled(level) || options.level === 'auto') {
+
+			var start = new Date()
+			, statusCode
+			, writeHead = res.writeHead
+			, url = req.originalUrl;
+
+			// flag as logging
+			req._logging = true;
+
+			// proxy for statusCode.
+			res.writeHead = function(code, headers){
+				res.writeHead = writeHead;
+				res.writeHead(code, headers);
+				res.__statusCode = statusCode = code;
+				res.__headers = headers || {};
+
+				//status code response level handling
+				if(options.level === 'auto'){
+					level = levels.INFO;
+					if(code >= 300) level = levels.WARN;
+					if(code >= 400) level = levels.ERROR;
+				} else {
+					level = levels.toLevel(options.level, levels.INFO);
+				}
+			};
+
+			//hook on end request to emit the log entry of the HTTP request.
+			res.on('finish', function() {
+				res.responseTime = new Date() - start;
+				//status code response level handling
+				if(res.statusCode && options.level === 'auto'){
+					level = levels.INFO;
+					if(res.statusCode >= 300) level = levels.WARN;
+					if(res.statusCode >= 400) level = levels.ERROR;
+				}
+				if (thislogger.isLevelEnabled(level)) {
+          var combined_tokens = assemble_tokens(req, res, options.tokens || []);
+					if (typeof fmt === 'function') {
+						var line = fmt(req, res, function(str){ return format(str, combined_tokens); });
+						if (line) thislogger.log(level, line);
+					} else {
+						thislogger.log(level, format(fmt, combined_tokens));
+					}
+				}
+			});
+		}
+
+    //ensure next gets always called
+    next();
+  };
+}
+
+/**
+ * Adds custom {token, replacement} objects to defaults,
+ * overwriting the defaults if any tokens clash
+ *
+ * @param  {IncomingMessage} req
+ * @param  {ServerResponse} res
+ * @param  {Array} custom_tokens
+ *    [{ token: string-or-regexp, replacement: string-or-replace-function }]
+ * @return {Array}
+ */
+function assemble_tokens(req, res, custom_tokens) {
+  var array_unique_tokens = function(array) {
+    var a = array.concat();
+    for(var i=0; i<a.length; ++i) {
+      for(var j=i+1; j<a.length; ++j) {
+        if(a[i].token == a[j].token) { // not === because token can be regexp object
+          a.splice(j--, 1);
+        }
+      }
+    }
+    return a;
+  };
+
+  var default_tokens = [];
+  default_tokens.push({ token: ':url', replacement: req.originalUrl });
+  default_tokens.push({ token: ':protocol', replacement: req.protocol });
+  default_tokens.push({ token: ':hostname', replacement: req.hostname });
+  default_tokens.push({ token: ':method', replacement: req.method });
+  default_tokens.push({ token: ':status', replacement: res.__statusCode || res.statusCode });
+  default_tokens.push({ token: ':response-time', replacement: res.responseTime });
+  default_tokens.push({ token: ':date', replacement: new Date().toUTCString() });
+  default_tokens.push({
+    token: ':referrer',
+    replacement: req.headers.referer || req.headers.referrer || ''
+  });
+  default_tokens.push({
+    token: ':http-version',
+    replacement: req.httpVersionMajor + '.' + req.httpVersionMinor
+  });
+  default_tokens.push({
+    token: ':remote-addr',
+    replacement:
+      req.headers['x-forwarded-for'] ||
+      req.ip ||
+      req._remoteAddress ||
+      (req.socket &&
+        (req.socket.remoteAddress ||
+          (req.socket.socket && req.socket.socket.remoteAddress)
+        )
+      )
+    }
+  );
+  default_tokens.push({ token: ':user-agent', replacement: req.headers['user-agent'] });
+  default_tokens.push({
+    token: ':content-length',
+    replacement:
+      (res._headers && res._headers['content-length']) ||
+      (res.__headers && res.__headers['Content-Length']) ||
+      '-'
+    }
+  );
+  default_tokens.push({ token: /:req\[([^\]]+)\]/g, replacement: function(_, field) {
+    return req.headers[field.toLowerCase()];
+  } });
+  default_tokens.push({ token: /:res\[([^\]]+)\]/g, replacement: function(_, field) {
+    return res._headers ?
+      (res._headers[field.toLowerCase()] || res.__headers[field])
+      : (res.__headers && res.__headers[field]);
+  } });
+
+  return array_unique_tokens(custom_tokens.concat(default_tokens));
+}
+
+/**
+ * Return formatted log line.
+ *
+ * @param  {String} str
+ * @param  {IncomingMessage} req
+ * @param  {ServerResponse} res
+ * @return {String}
+ * @api private
+ */
+
+function format(str, tokens) {
+  for (var i = 0; i < tokens.length; i++) {
+    str = str.replace(tokens[i].token, tokens[i].replacement);
+  }
+  return str;
+}
+
+/**
+ * Return RegExp Object about nolog
+ *
+ * @param  {String} nolog
+ * @return {RegExp}
+ * @api private
+ *
+ * syntax
+ *  1. String
+ *   1.1 "\\.gif"
+ *         NOT LOGGING http://example.com/hoge.gif and http://example.com/hoge.gif?fuga
+ *         LOGGING http://example.com/hoge.agif
+ *   1.2 in "\\.gif|\\.jpg$"
+ *         NOT LOGGING http://example.com/hoge.gif and
+ *           http://example.com/hoge.gif?fuga and http://example.com/hoge.jpg?fuga
+ *         LOGGING http://example.com/hoge.agif,
+ *           http://example.com/hoge.ajpg and http://example.com/hoge.jpg?hoge
+ *   1.3 in "\\.(gif|jpe?g|png)$"
+ *         NOT LOGGING http://example.com/hoge.gif and http://example.com/hoge.jpeg
+ *         LOGGING http://example.com/hoge.gif?uid=2 and http://example.com/hoge.jpg?pid=3
+ *  2. RegExp
+ *   2.1 in /\.(gif|jpe?g|png)$/
+ *         SAME AS 1.3
+ *  3. Array
+ *   3.1 ["\\.jpg$", "\\.png", "\\.gif"]
+ *         SAME AS "\\.jpg|\\.png|\\.gif"
+ */
+function createNoLogCondition(nolog) {
+  var regexp = null;
+
+	if (nolog) {
+    if (nolog instanceof RegExp) {
+      regexp = nolog;
+    }
+
+    if (typeof nolog === 'string') {
+      regexp = new RegExp(nolog);
+    }
+
+    if (Array.isArray(nolog)) {
+      var regexpsAsStrings = nolog.map(
+        function convertToStrings(o) {
+          return o.source ? o.source : o;
+        }
+      );
+      regexp = new RegExp(regexpsAsStrings.join('|'));
+    }
+  }
+
+  return regexp;
+}
+
+exports.connectLogger = getLogger;
+
+},{"./levels":10}],8:[function(require,module,exports){
+"use strict";
+exports.ISO8601_FORMAT = "yyyy-MM-dd hh:mm:ss.SSS";
+exports.ISO8601_WITH_TZ_OFFSET_FORMAT = "yyyy-MM-ddThh:mm:ssO";
+exports.DATETIME_FORMAT = "dd MM yyyy hh:mm:ss.SSS";
+exports.ABSOLUTETIME_FORMAT = "hh:mm:ss.SSS";
+
+function padWithZeros(vNumber, width) {
+  var numAsString = vNumber + "";
+  while (numAsString.length < width) {
+    numAsString = "0" + numAsString;
+  }
+  return numAsString;
+}
+
+function addZero(vNumber) {
+  return padWithZeros(vNumber, 2);
+}
+
+/**
+ * Formats the TimeOffest
+ * Thanks to http://www.svendtofte.com/code/date_format/
+ * @private
+ */
+function offset(timezoneOffset) {
+  // Difference to Greenwich time (GMT) in hours
+  var os = Math.abs(timezoneOffset);
+  var h = String(Math.floor(os/60));
+  var m = String(os%60);
+  if (h.length == 1) {
+    h = "0" + h;
+  }
+  if (m.length == 1) {
+    m = "0" + m;
+  }
+  return timezoneOffset < 0 ? "+"+h+m : "-"+h+m;
+}
+
+exports.asString = function(/*format,*/ date, timezoneOffset) {
+  /*jshint -W071 */
+  var format = exports.ISO8601_FORMAT;
+  if (typeof(date) === "string") {
+    format = arguments[0];
+    date = arguments[1];
+    timezoneOffset = arguments[2];
+  }
+  // make the date independent of the system timezone by working with UTC
+  if (timezoneOffset === undefined) {
+    timezoneOffset = date.getTimezoneOffset();
+  }
+  date.setUTCMinutes(date.getUTCMinutes() - timezoneOffset);
+  var vDay = addZero(date.getUTCDate());
+  var vMonth = addZero(date.getUTCMonth()+1);
+  var vYearLong = addZero(date.getUTCFullYear());
+  var vYearShort = addZero(date.getUTCFullYear().toString().substring(2,4));
+  var vYear = (format.indexOf("yyyy") > -1 ? vYearLong : vYearShort);
+  var vHour  = addZero(date.getUTCHours());
+  var vMinute = addZero(date.getUTCMinutes());
+  var vSecond = addZero(date.getUTCSeconds());
+  var vMillisecond = padWithZeros(date.getUTCMilliseconds(), 3);
+  var vTimeZone = offset(timezoneOffset);
+  date.setUTCMinutes(date.getUTCMinutes() + timezoneOffset);
+  var formatted = format
+    .replace(/dd/g, vDay)
+    .replace(/MM/g, vMonth)
+    .replace(/y{1,4}/g, vYear)
+    .replace(/hh/g, vHour)
+    .replace(/mm/g, vMinute)
+    .replace(/ss/g, vSecond)
+    .replace(/SSS/g, vMillisecond)
+    .replace(/O/g, vTimeZone);
+  return formatted;
+
+};
+/*jshint +W071 */
+
+},{}],9:[function(require,module,exports){
+(function (process){
+"use strict";
+var dateFormat = require('./date_format')
+, os = require('os')
+, eol = os.EOL || '\n'
+, util = require('util')
+, replacementRegExp = /%[sdj]/g
+, layoutMakers = {
+  "messagePassThrough": function() { return messagePassThroughLayout; },
+  "basic": function() { return basicLayout; },
+  "colored": function() { return colouredLayout; },
+  "coloured": function() { return colouredLayout; },
+  "pattern": function (config) {
+    return patternLayout(config && config.pattern, config && config.tokens);
+	},
+  "dummy": function() { return dummyLayout; }
+}
+, colours = {
+  ALL: "grey",
+  TRACE: "blue",
+  DEBUG: "cyan",
+  INFO: "green",
+  WARN: "yellow",
+  ERROR: "red",
+  FATAL: "magenta",
+  OFF: "grey"
+};
+
+function wrapErrorsWithInspect(items) {
+  return items.map(function(item) {
+    if ((item instanceof Error) && item.stack) {
+      return { inspect: function() { return util.format(item) + '\n' + item.stack; } };
+    } else {
+      return item;
+    }
+  });
+}
+
+function formatLogData(logData) {
+  var data = Array.isArray(logData) ? logData : Array.prototype.slice.call(arguments);
+  return util.format.apply(util, wrapErrorsWithInspect(data));
+}
+
+var styles = {
+    //styles
+  'bold'      : [1,  22],
+  'italic'    : [3,  23],
+  'underline' : [4,  24],
+  'inverse'   : [7,  27],
+  //grayscale
+  'white'     : [37, 39],
+  'grey'      : [90, 39],
+  'black'     : [90, 39],
+  //colors
+  'blue'      : [34, 39],
+  'cyan'      : [36, 39],
+  'green'     : [32, 39],
+  'magenta'   : [35, 39],
+  'red'       : [31, 39],
+  'yellow'    : [33, 39]
+};
+
+function colorizeStart(style) {
+  return style ? '\x1B[' + styles[style][0] + 'm' : '';
+}
+function colorizeEnd(style) {
+  return style ? '\x1B[' + styles[style][1] + 'm' : '';
+}
+/**
+ * Taken from masylum's fork (https://github.com/masylum/log4js-node)
+ */
+function colorize (str, style) {
+  return colorizeStart(style) + str + colorizeEnd(style);
+}
+
+function timestampLevelAndCategory(loggingEvent, colour, timezoneOffest) {
+  var output = colorize(
+    formatLogData(
+      '[%s] [%s] %s - '
+      , dateFormat.asString(loggingEvent.startTime, timezoneOffest)
+      , loggingEvent.level
+      , loggingEvent.categoryName
+    )
+    , colour
+  );
+  return output;
+}
+
+/**
+ * BasicLayout is a simple layout for storing the logs. The logs are stored
+ * in following format:
+ * <pre>
+ * [startTime] [logLevel] categoryName - message\n
+ * </pre>
+ *
+ * @author Stephan Strittmatter
+ */
+function basicLayout (loggingEvent, timezoneOffset) {
+  return timestampLevelAndCategory(
+    loggingEvent,
+    undefined,
+    timezoneOffset
+  ) + formatLogData(loggingEvent.data);
+}
+
+/**
+ * colouredLayout - taken from masylum's fork.
+ * same as basicLayout, but with colours.
+ */
+function colouredLayout (loggingEvent, timezoneOffset) {
+  return timestampLevelAndCategory(
+    loggingEvent,
+    colours[loggingEvent.level.toString()],
+    timezoneOffset
+  ) + formatLogData(loggingEvent.data);
+}
+
+function messagePassThroughLayout (loggingEvent) {
+  return formatLogData(loggingEvent.data);
+}
+
+function dummyLayout(loggingEvent) {
+  return loggingEvent.data[0];
+}
+
+/**
+ * PatternLayout
+ * Format for specifiers is %[padding].[truncation][field]{[format]}
+ * e.g. %5.10p - left pad the log level by 5 characters, up to a max of 10
+ * Fields can be any of:
+ *  - %r time in toLocaleTimeString format
+ *  - %p log level
+ *  - %c log category
+ *  - %h hostname
+ *  - %m log data
+ *  - %d date in various formats
+ *  - %% %
+ *  - %n newline
+ *  - %z pid
+ *  - %x{<tokenname>} add dynamic tokens to your log. Tokens are specified in the tokens parameter
+ * You can use %[ and %] to define a colored block.
+ *
+ * Tokens are specified as simple key:value objects.
+ * The key represents the token name whereas the value can be a string or function
+ * which is called to extract the value to put in the log message. If token is not
+ * found, it doesn't replace the field.
+ *
+ * A sample token would be: { "pid" : function() { return process.pid; } }
+ *
+ * Takes a pattern string, array of tokens and returns a layout function.
+ * @param {String} Log format pattern String
+ * @param {object} map object of different tokens
+ * @param {number} timezone offset in minutes
+ * @return {Function}
+ * @author Stephan Strittmatter
+ * @author Jan Schmidle
+ */
+function patternLayout (pattern, tokens, timezoneOffset) {
+  // jshint maxstatements:22
+  var TTCC_CONVERSION_PATTERN  = "%r %p %c - %m%n";
+  var regex = /%(-?[0-9]+)?(\.?[0-9]+)?([\[\]cdhmnprzxy%])(\{([^\}]+)\})?|([^%]+)/;
+
+  pattern = pattern || TTCC_CONVERSION_PATTERN;
+
+  function categoryName(loggingEvent, specifier) {
+    var loggerName = loggingEvent.categoryName;
+    if (specifier) {
+      var precision = parseInt(specifier, 10);
+      var loggerNameBits = loggerName.split(".");
+      if (precision < loggerNameBits.length) {
+        loggerName = loggerNameBits.slice(loggerNameBits.length - precision).join(".");
+      }
+    }
+    return loggerName;
+  }
+
+  function formatAsDate(loggingEvent, specifier) {
+    var format = dateFormat.ISO8601_FORMAT;
+    if (specifier) {
+      format = specifier;
+      // Pick up special cases
+      if (format == "ISO8601") {
+        format = dateFormat.ISO8601_FORMAT;
+      } else if (format == "ISO8601_WITH_TZ_OFFSET") {
+        format = dateFormat.ISO8601_WITH_TZ_OFFSET_FORMAT;
+      } else if (format == "ABSOLUTE") {
+        format = dateFormat.ABSOLUTETIME_FORMAT;
+      } else if (format == "DATE") {
+        format = dateFormat.DATETIME_FORMAT;
+      }
+    }
+    // Format the date
+    return dateFormat.asString(format, loggingEvent.startTime, timezoneOffset);
+  }
+
+  function hostname() {
+    return os.hostname().toString();
+  }
+
+  function formatMessage(loggingEvent) {
+    return formatLogData(loggingEvent.data);
+  }
+
+  function endOfLine() {
+    return eol;
+  }
+
+  function logLevel(loggingEvent) {
+    return loggingEvent.level.toString();
+  }
+
+  function startTime(loggingEvent) {
+    return dateFormat.asString('hh:mm:ss', loggingEvent.startTime, timezoneOffset);
+  }
+
+  function startColour(loggingEvent) {
+    return colorizeStart(colours[loggingEvent.level.toString()]);
+  }
+
+  function endColour(loggingEvent) {
+    return colorizeEnd(colours[loggingEvent.level.toString()]);
+  }
+
+  function percent() {
+    return '%';
+  }
+
+  function pid(loggingEvent) {
+    if (loggingEvent && loggingEvent.pid) {
+      return loggingEvent.pid;
+    } else {
+      return process.pid;
+    }
+  }
+
+  function clusterInfo(loggingEvent, specifier) {
+    if (loggingEvent.cluster && specifier) {
+      return specifier
+        .replace('%m', loggingEvent.cluster.master)
+        .replace('%w', loggingEvent.cluster.worker)
+        .replace('%i', loggingEvent.cluster.workerId);
+    } else if (loggingEvent.cluster) {
+      return loggingEvent.cluster.worker+'@'+loggingEvent.cluster.master;
+    } else {
+      return pid();
+    }
+  }
+
+  function userDefined(loggingEvent, specifier) {
+    if (typeof(tokens[specifier]) !== 'undefined') {
+      if (typeof(tokens[specifier]) === 'function') {
+        return tokens[specifier](loggingEvent);
+      } else {
+        return tokens[specifier];
+      }
+    }
+    return null;
+  }
+
+  var replacers = {
+    'c': categoryName,
+    'd': formatAsDate,
+    'h': hostname,
+    'm': formatMessage,
+    'n': endOfLine,
+    'p': logLevel,
+    'r': startTime,
+    '[': startColour,
+    ']': endColour,
+    'y': clusterInfo,
+    'z': pid,
+    '%': percent,
+    'x': userDefined
+  };
+
+  function replaceToken(conversionCharacter, loggingEvent, specifier) {
+    return replacers[conversionCharacter](loggingEvent, specifier);
+  }
+
+  function truncate(truncation, toTruncate) {
+    var len;
+    if (truncation) {
+      len = parseInt(truncation.substr(1), 10);
+      return toTruncate.substring(0, len);
+    }
+
+    return toTruncate;
+  }
+
+  function pad(padding, toPad) {
+    var len;
+    if (padding) {
+      if (padding.charAt(0) == "-") {
+        len = parseInt(padding.substr(1), 10);
+        // Right pad with spaces
+        while (toPad.length < len) {
+          toPad += " ";
+        }
+      } else {
+        len = parseInt(padding, 10);
+        // Left pad with spaces
+        while (toPad.length < len) {
+          toPad = " " + toPad;
+        }
+      }
+    }
+    return toPad;
+  }
+
+  function truncateAndPad(toTruncAndPad, truncation, padding) {
+    var replacement = toTruncAndPad;
+    replacement = truncate(truncation, replacement);
+    replacement = pad(padding, replacement);
+    return replacement;
+  }
+
+  return function(loggingEvent) {
+    var formattedString = "";
+    var result;
+    var searchString = pattern;
+
+    while ((result = regex.exec(searchString))) {
+      var matchedString = result[0];
+      var padding = result[1];
+      var truncation = result[2];
+      var conversionCharacter = result[3];
+      var specifier = result[5];
+      var text = result[6];
+
+      // Check if the pattern matched was just normal text
+      if (text) {
+        formattedString += "" + text;
+      } else {
+        // Create a raw replacement string based on the conversion
+        // character and specifier
+        var replacement = replaceToken(conversionCharacter, loggingEvent, specifier);
+        formattedString += truncateAndPad(replacement, truncation, padding);
+      }
+      searchString = searchString.substr(result.index + result[0].length);
+    }
+    return formattedString;
+  };
+
+}
+
+module.exports = {
+  basicLayout: basicLayout,
+  messagePassThroughLayout: messagePassThroughLayout,
+  patternLayout: patternLayout,
+  colouredLayout: colouredLayout,
+  coloredLayout: colouredLayout,
+  dummyLayout: dummyLayout,
+  addLayout: function(name, serializerGenerator) {
+    layoutMakers[name] = serializerGenerator;
+  },
+  layout: function(name, config) {
+    return layoutMakers[name] && layoutMakers[name](config);
+  }
+};
+
+}).call(this,require('_process'))
+},{"./date_format":8,"_process":14,"os":2,"util":16}],10:[function(require,module,exports){
+"use strict";
+
+function Level(level, levelStr) {
+  this.level = level;
+  this.levelStr = levelStr;
+}
+
+/**
+ * converts given String to corresponding Level
+ * @param {String} sArg String value of Level OR Log4js.Level
+ * @param {Log4js.Level} defaultLevel default Level, if no String representation
+ * @return Level object
+ * @type Log4js.Level
+ */
+function toLevel(sArg, defaultLevel) {
+  if (!sArg) {
+    return defaultLevel;
+  }
+  if (typeof sArg === "string") {
+    return module.exports[sArg.toUpperCase()] || defaultLevel;
+  }
+  return toLevel(sArg.toString());
+}
+
+Level.prototype.toString = function() {
+  return this.levelStr;
+};
+
+Level.prototype.isLessThanOrEqualTo = function(otherLevel) {
+  if (typeof otherLevel === "string") {
+    otherLevel = toLevel(otherLevel);
+  }
+  return this.level <= otherLevel.level;
+};
+
+Level.prototype.isGreaterThanOrEqualTo = function(otherLevel) {
+  if (typeof otherLevel === "string") {
+    otherLevel = toLevel(otherLevel);
+  }
+  return this.level >= otherLevel.level;
+};
+
+Level.prototype.isEqualTo = function(otherLevel) {
+  if (typeof otherLevel == "string") {
+    otherLevel = toLevel(otherLevel);
+  }
+  return this.level === otherLevel.level;
+};
+
+module.exports = {
+  ALL: new Level(Number.MIN_VALUE, "ALL"),
+  TRACE: new Level(5000, "TRACE"),
+  DEBUG: new Level(10000, "DEBUG"),
+  INFO: new Level(20000, "INFO"),
+  WARN: new Level(30000, "WARN"),
+  ERROR: new Level(40000, "ERROR"),
+  FATAL: new Level(50000, "FATAL"),
+  MARK: new Level(9007199254740992, "MARK"), // 2^53
+  OFF: new Level(Number.MAX_VALUE, "OFF"),
+  toLevel: toLevel
+};
+
+},{}],11:[function(require,module,exports){
+(function (process){
+"use strict";
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileoverview log4js is a library to log in JavaScript in similar manner
+ * than in log4j for Java. The API should be nearly the same.
+ *
+ * <h3>Example:</h3>
+ * <pre>
+ *  var logging = require('log4js');
+ *  //add an appender that logs all messages to stdout.
+ *  logging.addAppender(logging.consoleAppender());
+ *  //add an appender that logs "some-category" to a file
+ *  logging.addAppender(logging.fileAppender("file.log"), "some-category");
+ *  //get a logger
+ *  var log = logging.getLogger("some-category");
+ *  log.setLevel(logging.levels.TRACE); //set the Level
+ *
+ *  ...
+ *
+ *  //call the log
+ *  log.trace("trace me" );
+ * </pre>
+ *
+ * NOTE: the authors below are the original browser-based log4js authors
+ * don't try to contact them about bugs in this version :)
+ * @version 1.0
+ * @author Stephan Strittmatter - http://jroller.com/page/stritti
+ * @author Seth Chisamore - http://www.chisamore.com
+ * @since 2005-05-20
+ * @static
+ * Website: http://log4js.berlios.de
+ */
+var events = require('events')
+, fs = require('fs')
+, path = require('path')
+, util = require('util')
+, layouts = require('./layouts')
+, levels = require('./levels')
+, loggerModule = require('./logger')
+, LoggingEvent = loggerModule.LoggingEvent
+, Logger = loggerModule.Logger
+, ALL_CATEGORIES = '[all]'
+, appenders = {}
+, loggers = {}
+, appenderMakers = {}
+, appenderShutdowns = {}
+, defaultConfig =   {
+  appenders: [
+    { type: "console" }
+  ],
+  replaceConsole: false
+};
+
+require('./appenders/console');
+
+function hasLogger(logger) {
+  return loggers.hasOwnProperty(logger);
+}
+
+
+function getBufferedLogger(categoryName) {
+    var base_logger = getLogger(categoryName);
+    var logger = {};
+    logger.temp = [];
+    logger.target = base_logger;
+    logger.flush = function () {
+        for (var i = 0; i < logger.temp.length; i++) {
+            var log = logger.temp[i];
+            logger.target[log.level](log.message);
+            delete logger.temp[i];
+        }
+    };
+    logger.trace = function (message) { logger.temp.push({level: 'trace', message: message}); };
+    logger.debug = function (message) { logger.temp.push({level: 'debug', message: message}); };
+    logger.info = function (message) { logger.temp.push({level: 'info', message: message}); };
+    logger.warn = function (message) { logger.temp.push({level: 'warn', message: message}); };
+    logger.error = function (message) { logger.temp.push({level: 'error', message: message}); };
+    logger.fatal = function (message) { logger.temp.push({level: 'fatal', message: message}); };
+
+    return logger;
+}
+
+function normalizeCategory (category) {
+  return  category + '.';
+}
+
+function doesLevelEntryContainsLogger (levelCategory, loggerCategory) {
+  var normalizedLevelCategory = normalizeCategory(levelCategory);
+  var normalizedLoggerCategory = normalizeCategory(loggerCategory);
+  return normalizedLoggerCategory.substring(0, normalizedLevelCategory.length) == normalizedLevelCategory; //jshint ignore:line
+}
+
+function doesAppenderContainsLogger (appenderCategory, loggerCategory) {
+  var normalizedAppenderCategory = normalizeCategory(appenderCategory);
+  var normalizedLoggerCategory = normalizeCategory(loggerCategory);
+  return normalizedLoggerCategory.substring(0, normalizedAppenderCategory.length) == normalizedAppenderCategory; //jshint ignore:line
+}
+
+
+/**
+ * Get a logger instance. Instance is cached on categoryName level.
+ * @param  {String} categoryName name of category to log to.
+ * @return {Logger} instance of logger for the category
+ * @static
+ */
+function getLogger (loggerCategoryName) {
+
+  // Use default logger if categoryName is not specified or invalid
+  if (typeof loggerCategoryName !== "string") {
+    loggerCategoryName = Logger.DEFAULT_CATEGORY;
+  }
+
+  if (!hasLogger(loggerCategoryName)) {
+
+    var level;
+
+    /* jshint -W073 */
+    // If there's a "levels" entry in the configuration
+    if (levels.config) {
+      // Goes through the categories in the levels configuration entry,
+      // starting with the "higher" ones.
+      var keys = Object.keys(levels.config).sort();
+      for (var idx = 0; idx < keys.length; idx++) {
+        var levelCategory = keys[idx];
+        if (doesLevelEntryContainsLogger(levelCategory, loggerCategoryName)) {
+          // level for the logger
+          level = levels.config[levelCategory];
+        }
+      }
+    }
+    /* jshint +W073 */
+
+    // Create the logger for this name if it doesn't already exist
+    loggers[loggerCategoryName] = new Logger(loggerCategoryName, level);
+
+    /* jshint -W083 */
+    var appenderList;
+    for(var appenderCategory in appenders) {
+      if (doesAppenderContainsLogger(appenderCategory, loggerCategoryName)) {
+        appenderList = appenders[appenderCategory];
+        appenderList.forEach(function(appender) {
+          loggers[loggerCategoryName].addListener("log", appender);
+        });
+      }
+    }
+    /* jshint +W083 */
+
+    if (appenders[ALL_CATEGORIES]) {
+      appenderList = appenders[ALL_CATEGORIES];
+      appenderList.forEach(function(appender) {
+        loggers[loggerCategoryName].addListener("log", appender);
+      });
+    }
+  }
+
+  return loggers[loggerCategoryName];
+}
+
+/**
+ * args are appender, then zero or more categories
+ */
+function addAppender () {
+  var args = Array.prototype.slice.call(arguments);
+  var appender = args.shift();
+  if (args.length === 0 || args[0] === undefined) {
+    args = [ ALL_CATEGORIES ];
+  }
+  //argument may already be an array
+  if (Array.isArray(args[0])) {
+    args = args[0];
+  }
+
+  args.forEach(function(appenderCategory) {
+    addAppenderToCategory(appender, appenderCategory);
+
+    if (appenderCategory === ALL_CATEGORIES) {
+      addAppenderToAllLoggers(appender);
+    } else {
+
+      for(var loggerCategory in loggers) {
+        if (doesAppenderContainsLogger(appenderCategory,loggerCategory)) {
+          loggers[loggerCategory].addListener("log", appender);
+        }
+      }
+
+    }
+  });
+}
+
+function addAppenderToAllLoggers(appender) {
+  for (var logger in loggers) {
+    if (hasLogger(logger)) {
+      loggers[logger].addListener("log", appender);
+    }
+  }
+}
+
+function addAppenderToCategory(appender, category) {
+  if (!appenders[category]) {
+    appenders[category] = [];
+  }
+  appenders[category].push(appender);
+}
+
+function clearAppenders () {
+  appenders = {};
+  for (var logger in loggers) {
+    if (hasLogger(logger)) {
+      loggers[logger].removeAllListeners("log");
+    }
+  }
+}
+
+function configureAppenders(appenderList, options) {
+  clearAppenders();
+  if (appenderList) {
+    appenderList.forEach(function(appenderConfig) {
+      loadAppender(appenderConfig.type);
+      var appender;
+      appenderConfig.makers = appenderMakers;
+      try {
+        appender = appenderMakers[appenderConfig.type](appenderConfig, options);
+        addAppender(appender, appenderConfig.category);
+      } catch(e) {
+        throw new Error("log4js configuration problem for " + util.inspect(appenderConfig), e);
+      }
+    });
+  }
+}
+
+function configureLevels(_levels) {
+  levels.config = _levels; // Keep it so we can create loggers later using this cfg
+  if (_levels) {
+    var keys = Object.keys(levels.config).sort();
+    for (var idx in keys) {
+      var category = keys[idx];
+      if(category === ALL_CATEGORIES) {
+        setGlobalLogLevel(_levels[category]);
+      }
+      /* jshint -W073 */
+      for(var loggerCategory in loggers) {
+        if (doesLevelEntryContainsLogger(category, loggerCategory)) {
+          loggers[loggerCategory].setLevel(_levels[category]);
+        }
+      }
+      /* jshint +W073 */
+    }
+  }
+}
+
+function setGlobalLogLevel(level) {
+  Logger.prototype.level = levels.toLevel(level, levels.TRACE);
+}
+
+/**
+ * Get the default logger instance.
+ * @return {Logger} instance of default logger
+ * @static
+ */
+function getDefaultLogger () {
+  return getLogger(Logger.DEFAULT_CATEGORY);
+}
+
+var configState = {};
+
+function loadConfigurationFile(filename) {
+  if (filename) {
+    return JSON.parse(fs.readFileSync(filename, "utf8"));
+  }
+  return undefined;
+}
+
+function configureOnceOff(config, options) {
+  if (config) {
+    try {
+      configureLevels(config.levels);
+      configureAppenders(config.appenders, options);
+
+      if (config.replaceConsole) {
+        replaceConsole();
+      } else {
+        restoreConsole();
+      }
+    } catch (e) {
+      throw new Error(
+        "Problem reading log4js config " + util.inspect(config) +
+          ". Error was \"" + e.message + "\" (" + e.stack + ")"
+      );
+    }
+  }
+}
+
+function reloadConfiguration(options) {
+  var mtime = getMTime(configState.filename);
+  if (!mtime) return;
+
+  if (configState.lastMTime && (mtime.getTime() > configState.lastMTime.getTime())) {
+    configureOnceOff(loadConfigurationFile(configState.filename), options);
+  }
+  configState.lastMTime = mtime;
+}
+
+function getMTime(filename) {
+  var mtime;
+  try {
+    mtime = fs.statSync(configState.filename).mtime;
+  } catch (e) {
+    getLogger('log4js').warn('Failed to load configuration file ' + filename);
+  }
+  return mtime;
+}
+
+function initReloadConfiguration(filename, options) {
+  if (configState.timerId) {
+    clearInterval(configState.timerId);
+    delete configState.timerId;
+  }
+  configState.filename = filename;
+  configState.lastMTime = getMTime(filename);
+  configState.timerId = setInterval(reloadConfiguration, options.reloadSecs*1000, options);
+}
+
+function configure(configurationFileOrObject, options) {
+  var config = configurationFileOrObject;
+  config = config || process.env.LOG4JS_CONFIG;
+  options = options || {};
+
+  if (config === undefined || config === null || typeof(config) === 'string') {
+    if (options.reloadSecs) {
+      initReloadConfiguration(config, options);
+    }
+    config = loadConfigurationFile(config) || defaultConfig;
+  } else {
+    if (options.reloadSecs) {
+      getLogger('log4js').warn(
+        'Ignoring configuration reload parameter for "object" configuration.'
+      );
+    }
+  }
+  configureOnceOff(config, options);
+}
+
+var originalConsoleFunctions = {
+  log: console.log,
+  debug: console.debug,
+  info: console.info,
+  warn: console.warn,
+  error: console.error
+};
+
+function replaceConsole(logger) {
+  function replaceWith(fn) {
+    return function() {
+      fn.apply(logger, arguments);
+    };
+  }
+  logger = logger || getLogger("console");
+  ['log','debug','info','warn','error'].forEach(function (item) {
+    console[item] = replaceWith(item === 'log' ? logger.info : logger[item]);
+  });
+}
+
+function restoreConsole() {
+  ['log', 'debug', 'info', 'warn', 'error'].forEach(function (item) {
+    console[item] = originalConsoleFunctions[item];
+  });
+}
+
+/**
+ * Load an appenderModule based on the provided appender filepath. Will first
+ * check if the appender path is a subpath of the log4js "lib/appenders" directory.
+ * If not, it will attempt to load the the appender as complete path.
+ *
+ * @param {string} appender The filepath for the appender.
+ * @returns {Object|null} The required appender or null if appender could not be loaded.
+ * @private
+ */
+function requireAppender(appender) {
+  var appenderModule;
+  try {
+    appenderModule = require('./appenders/' + appender);
+  } catch (e) {
+    appenderModule = require(appender);
+  }
+  return appenderModule;
+}
+
+/**
+ * Load an appender. Provided the appender path to be loaded. If appenderModule is defined,
+ * it will be used in place of requiring the appender module.
+ *
+ * @param {string} appender The path to the appender module.
+ * @param {Object|void} [appenderModule] The pre-required appender module. When provided,
+ * instead of requiring the appender by its path, this object will be used.
+ * @returns {void}
+ * @private
+ */
+function loadAppender(appender, appenderModule) {
+  appenderModule = appenderModule || requireAppender(appender);
+
+  if (!appenderModule) {
+    throw new Error("Invalid log4js appender: " + util.inspect(appender));
+  }
+
+  module.exports.appenders[appender] = appenderModule.appender.bind(appenderModule);
+  if (appenderModule.shutdown) {
+    appenderShutdowns[appender] = appenderModule.shutdown.bind(appenderModule);
+  }
+  appenderMakers[appender] = appenderModule.configure.bind(appenderModule);
+}
+
+/**
+ * Shutdown all log appenders. This will first disable all writing to appenders
+ * and then call the shutdown function each appender.
+ *
+ * @params {Function} cb - The callback to be invoked once all appenders have
+ *  shutdown. If an error occurs, the callback will be given the error object
+ *  as the first argument.
+ * @returns {void}
+ */
+function shutdown(cb) {
+  // First, disable all writing to appenders. This prevents appenders from
+  // not being able to be drained because of run-away log writes.
+  loggerModule.disableAllLogWrites();
+
+  // Call each of the shutdown functions in parallel
+  var completed = 0;
+  var error;
+  var shutdownFcts = [];
+  var complete = function(err) {
+    error = error || err;
+    completed++;
+    if (completed >= shutdownFcts.length) {
+      cb(error);
+    }
+  };
+  for (var category in appenderShutdowns) {
+    if (appenderShutdowns.hasOwnProperty(category)) {
+      shutdownFcts.push(appenderShutdowns[category]);
+    }
+  }
+  if (!shutdownFcts.length) {
+    return cb();
+  }
+  shutdownFcts.forEach(function(shutdownFct) { shutdownFct(complete); });
+}
+
+module.exports = {
+  getBufferedLogger: getBufferedLogger,
+  getLogger: getLogger,
+  getDefaultLogger: getDefaultLogger,
+  hasLogger: hasLogger,
+
+  addAppender: addAppender,
+  loadAppender: loadAppender,
+  clearAppenders: clearAppenders,
+  configure: configure,
+  shutdown: shutdown,
+
+  replaceConsole: replaceConsole,
+  restoreConsole: restoreConsole,
+
+  levels: levels,
+  setGlobalLogLevel: setGlobalLogLevel,
+
+  layouts: layouts,
+  appenders: {},
+  appenderMakers: appenderMakers,
+  connectLogger: require('./connect-logger').connectLogger
+};
+
+//set ourselves up
+configure();
+
+}).call(this,require('_process'))
+},{"./appenders/console":6,"./connect-logger":7,"./layouts":9,"./levels":10,"./logger":12,"_process":14,"events":4,"fs":3,"path":13,"util":16}],12:[function(require,module,exports){
+"use strict";
+var levels = require('./levels')
+, util = require('util')
+, events = require('events')
+, DEFAULT_CATEGORY = '[default]';
+
+var logWritesEnabled = true;
+
+/**
+ * Models a logging event.
+ * @constructor
+ * @param {String} categoryName name of category
+ * @param {Log4js.Level} level level of message
+ * @param {Array} data objects to log
+ * @param {Log4js.Logger} logger the associated logger
+ * @author Seth Chisamore
+ */
+function LoggingEvent (categoryName, level, data, logger) {
+  this.startTime = new Date();
+  this.categoryName = categoryName;
+  this.data = data;
+  this.level = level;
+  this.logger = logger;
+}
+
+/**
+ * Logger to log messages.
+ * use {@see Log4js#getLogger(String)} to get an instance.
+ * @constructor
+ * @param name name of category to log to
+ * @author Stephan Strittmatter
+ */
+function Logger (name, level) {
+  this.category = name || DEFAULT_CATEGORY;
+
+  if (level) {
+    this.setLevel(level);
+  }
+}
+util.inherits(Logger, events.EventEmitter);
+Logger.DEFAULT_CATEGORY = DEFAULT_CATEGORY;
+Logger.prototype.level = levels.TRACE;
+
+Logger.prototype.setLevel = function(level) {
+  this.level = levels.toLevel(level, this.level || levels.TRACE);
+};
+
+Logger.prototype.removeLevel = function() {
+  delete this.level;
+};
+
+Logger.prototype.log = function() {
+  var logLevel = levels.toLevel(arguments[0], levels.INFO);
+  if (!this.isLevelEnabled(logLevel)) {
+    return;
+  }
+  var numArgs = arguments.length - 1;
+  var args = new Array(numArgs);
+  for (var i = 0; i < numArgs; i++) {
+    args[i] = arguments[i + 1];
+  }
+  this._log(logLevel, args);
+};
+
+Logger.prototype.isLevelEnabled = function(otherLevel) {
+  return this.level.isLessThanOrEqualTo(otherLevel);
+};
+
+['Trace','Debug','Info','Warn','Error','Fatal', 'Mark'].forEach(
+  function(levelString) {
+    var level = levels.toLevel(levelString);
+    Logger.prototype['is'+levelString+'Enabled'] = function() {
+      return this.isLevelEnabled(level);
+    };
+
+    Logger.prototype[levelString.toLowerCase()] = function () {
+      if (logWritesEnabled && this.isLevelEnabled(level)) {
+        var numArgs = arguments.length;
+        var args = new Array(numArgs);
+        for (var i = 0; i < numArgs; i++) {
+          args[i] = arguments[i];
+        }
+        this._log(level, args);
+      }
+    };
+  }
+);
+
+Logger.prototype._log = function(level, data) {
+  var loggingEvent = new LoggingEvent(this.category, level, data, this);
+  this.emit('log', loggingEvent);
+};
+
+/**
+ * Disable all log writes.
+ * @returns {void}
+ */
+function disableAllLogWrites() {
+  logWritesEnabled = false;
+}
+
+/**
+ * Enable log writes.
+ * @returns {void}
+ */
+function enableAllLogWrites() {
+  logWritesEnabled = true;
+}
+
+exports.LoggingEvent = LoggingEvent;
+exports.Logger = Logger;
+exports.disableAllLogWrites = disableAllLogWrites;
+exports.enableAllLogWrites = enableAllLogWrites;
+
+},{"./levels":10,"events":4,"util":16}],13:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1069,7 +2449,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":7}],7:[function(require,module,exports){
+},{"_process":14}],14:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1129,14 +2509,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],8:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],9:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1726,1387 +3106,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":8,"_process":7,"inherits":5}],10:[function(require,module,exports){
-"use strict";
-var layouts = require('../layouts')
-, consoleLog = console.log.bind(console);
-
-function consoleAppender (layout, timezoneOffset) {
-  layout = layout || layouts.colouredLayout;
-  return function(loggingEvent) {
-    consoleLog(layout(loggingEvent, timezoneOffset));
-  };
-}
-
-function configure(config) {
-  var layout;
-  if (config.layout) {
-    layout = layouts.layout(config.layout.type, config.layout);
-  }
-  return consoleAppender(layout, config.timezoneOffset);
-}
-
-exports.appender = consoleAppender;
-exports.configure = configure;
-
-},{"../layouts":13}],11:[function(require,module,exports){
-"use strict";
-var levels = require("./levels");
-var DEFAULT_FORMAT = ':remote-addr - -' +
-  ' ":method :url HTTP/:http-version"' +
-  ' :status :content-length ":referrer"' +
-  ' ":user-agent"';
-/**
- * Log requests with the given `options` or a `format` string.
- *
- * Options:
- *
- *   - `format`        Format string, see below for tokens
- *   - `level`         A log4js levels instance. Supports also 'auto'
- *
- * Tokens:
- *
- *   - `:req[header]` ex: `:req[Accept]`
- *   - `:res[header]` ex: `:res[Content-Length]`
- *   - `:http-version`
- *   - `:response-time`
- *   - `:remote-addr`
- *   - `:date`
- *   - `:method`
- *   - `:url`
- *   - `:referrer`
- *   - `:user-agent`
- *   - `:status`
- *
- * @param {String|Function|Object} format or options
- * @return {Function}
- * @api public
- */
-
-function getLogger(logger4js, options) {
-	if ('object' == typeof options) {
-		options = options || {};
-	} else if (options) {
-		options = { format: options };
-	} else {
-		options = {};
-	}
-
-	var thislogger = logger4js
-  , level = levels.toLevel(options.level, levels.INFO)
-  , fmt = options.format || DEFAULT_FORMAT
-  , nolog = options.nolog ? createNoLogCondition(options.nolog) : null;
-
-  return function (req, res, next) {
-    // mount safety
-    if (req._logging) return next();
-
-		// nologs
-		if (nolog && nolog.test(req.originalUrl)) return next();
-		if (thislogger.isLevelEnabled(level) || options.level === 'auto') {
-
-			var start = new Date()
-			, statusCode
-			, writeHead = res.writeHead
-			, url = req.originalUrl;
-
-			// flag as logging
-			req._logging = true;
-
-			// proxy for statusCode.
-			res.writeHead = function(code, headers){
-				res.writeHead = writeHead;
-				res.writeHead(code, headers);
-				res.__statusCode = statusCode = code;
-				res.__headers = headers || {};
-
-				//status code response level handling
-				if(options.level === 'auto'){
-					level = levels.INFO;
-					if(code >= 300) level = levels.WARN;
-					if(code >= 400) level = levels.ERROR;
-				} else {
-					level = levels.toLevel(options.level, levels.INFO);
-				}
-			};
-
-			//hook on end request to emit the log entry of the HTTP request.
-			res.on('finish', function() {
-				res.responseTime = new Date() - start;
-				//status code response level handling
-				if(res.statusCode && options.level === 'auto'){
-					level = levels.INFO;
-					if(res.statusCode >= 300) level = levels.WARN;
-					if(res.statusCode >= 400) level = levels.ERROR;
-				}
-				if (thislogger.isLevelEnabled(level)) {
-          var combined_tokens = assemble_tokens(req, res, options.tokens || []);
-					if (typeof fmt === 'function') {
-						var line = fmt(req, res, function(str){ return format(str, combined_tokens); });
-						if (line) thislogger.log(level, line);
-					} else {
-						thislogger.log(level, format(fmt, combined_tokens));
-					}
-				}
-			});
-		}
-
-    //ensure next gets always called
-    next();
-  };
-}
-
-/**
- * Adds custom {token, replacement} objects to defaults,
- * overwriting the defaults if any tokens clash
- *
- * @param  {IncomingMessage} req
- * @param  {ServerResponse} res
- * @param  {Array} custom_tokens
- *    [{ token: string-or-regexp, replacement: string-or-replace-function }]
- * @return {Array}
- */
-function assemble_tokens(req, res, custom_tokens) {
-  var array_unique_tokens = function(array) {
-    var a = array.concat();
-    for(var i=0; i<a.length; ++i) {
-      for(var j=i+1; j<a.length; ++j) {
-        if(a[i].token == a[j].token) { // not === because token can be regexp object
-          a.splice(j--, 1);
-        }
-      }
-    }
-    return a;
-  };
-
-  var default_tokens = [];
-  default_tokens.push({ token: ':url', replacement: req.originalUrl });
-  default_tokens.push({ token: ':protocol', replacement: req.protocol });
-  default_tokens.push({ token: ':hostname', replacement: req.hostname });
-  default_tokens.push({ token: ':method', replacement: req.method });
-  default_tokens.push({ token: ':status', replacement: res.__statusCode || res.statusCode });
-  default_tokens.push({ token: ':response-time', replacement: res.responseTime });
-  default_tokens.push({ token: ':date', replacement: new Date().toUTCString() });
-  default_tokens.push({
-    token: ':referrer',
-    replacement: req.headers.referer || req.headers.referrer || ''
-  });
-  default_tokens.push({
-    token: ':http-version',
-    replacement: req.httpVersionMajor + '.' + req.httpVersionMinor
-  });
-  default_tokens.push({
-    token: ':remote-addr',
-    replacement:
-      req.headers['x-forwarded-for'] ||
-      req.ip ||
-      req._remoteAddress ||
-      (req.socket &&
-        (req.socket.remoteAddress ||
-          (req.socket.socket && req.socket.socket.remoteAddress)
-        )
-      )
-    }
-  );
-  default_tokens.push({ token: ':user-agent', replacement: req.headers['user-agent'] });
-  default_tokens.push({
-    token: ':content-length',
-    replacement:
-      (res._headers && res._headers['content-length']) ||
-      (res.__headers && res.__headers['Content-Length']) ||
-      '-'
-    }
-  );
-  default_tokens.push({ token: /:req\[([^\]]+)\]/g, replacement: function(_, field) {
-    return req.headers[field.toLowerCase()];
-  } });
-  default_tokens.push({ token: /:res\[([^\]]+)\]/g, replacement: function(_, field) {
-    return res._headers ?
-      (res._headers[field.toLowerCase()] || res.__headers[field])
-      : (res.__headers && res.__headers[field]);
-  } });
-
-  return array_unique_tokens(custom_tokens.concat(default_tokens));
-}
-
-/**
- * Return formatted log line.
- *
- * @param  {String} str
- * @param  {IncomingMessage} req
- * @param  {ServerResponse} res
- * @return {String}
- * @api private
- */
-
-function format(str, tokens) {
-  for (var i = 0; i < tokens.length; i++) {
-    str = str.replace(tokens[i].token, tokens[i].replacement);
-  }
-  return str;
-}
-
-/**
- * Return RegExp Object about nolog
- *
- * @param  {String} nolog
- * @return {RegExp}
- * @api private
- *
- * syntax
- *  1. String
- *   1.1 "\\.gif"
- *         NOT LOGGING http://example.com/hoge.gif and http://example.com/hoge.gif?fuga
- *         LOGGING http://example.com/hoge.agif
- *   1.2 in "\\.gif|\\.jpg$"
- *         NOT LOGGING http://example.com/hoge.gif and
- *           http://example.com/hoge.gif?fuga and http://example.com/hoge.jpg?fuga
- *         LOGGING http://example.com/hoge.agif,
- *           http://example.com/hoge.ajpg and http://example.com/hoge.jpg?hoge
- *   1.3 in "\\.(gif|jpe?g|png)$"
- *         NOT LOGGING http://example.com/hoge.gif and http://example.com/hoge.jpeg
- *         LOGGING http://example.com/hoge.gif?uid=2 and http://example.com/hoge.jpg?pid=3
- *  2. RegExp
- *   2.1 in /\.(gif|jpe?g|png)$/
- *         SAME AS 1.3
- *  3. Array
- *   3.1 ["\\.jpg$", "\\.png", "\\.gif"]
- *         SAME AS "\\.jpg|\\.png|\\.gif"
- */
-function createNoLogCondition(nolog) {
-  var regexp = null;
-
-	if (nolog) {
-    if (nolog instanceof RegExp) {
-      regexp = nolog;
-    }
-
-    if (typeof nolog === 'string') {
-      regexp = new RegExp(nolog);
-    }
-
-    if (Array.isArray(nolog)) {
-      var regexpsAsStrings = nolog.map(
-        function convertToStrings(o) {
-          return o.source ? o.source : o;
-        }
-      );
-      regexp = new RegExp(regexpsAsStrings.join('|'));
-    }
-  }
-
-  return regexp;
-}
-
-exports.connectLogger = getLogger;
-
-},{"./levels":14}],12:[function(require,module,exports){
-"use strict";
-exports.ISO8601_FORMAT = "yyyy-MM-dd hh:mm:ss.SSS";
-exports.ISO8601_WITH_TZ_OFFSET_FORMAT = "yyyy-MM-ddThh:mm:ssO";
-exports.DATETIME_FORMAT = "dd MM yyyy hh:mm:ss.SSS";
-exports.ABSOLUTETIME_FORMAT = "hh:mm:ss.SSS";
-
-function padWithZeros(vNumber, width) {
-  var numAsString = vNumber + "";
-  while (numAsString.length < width) {
-    numAsString = "0" + numAsString;
-  }
-  return numAsString;
-}
-
-function addZero(vNumber) {
-  return padWithZeros(vNumber, 2);
-}
-
-/**
- * Formats the TimeOffest
- * Thanks to http://www.svendtofte.com/code/date_format/
- * @private
- */
-function offset(timezoneOffset) {
-  // Difference to Greenwich time (GMT) in hours
-  var os = Math.abs(timezoneOffset);
-  var h = String(Math.floor(os/60));
-  var m = String(os%60);
-  if (h.length == 1) {
-    h = "0" + h;
-  }
-  if (m.length == 1) {
-    m = "0" + m;
-  }
-  return timezoneOffset < 0 ? "+"+h+m : "-"+h+m;
-}
-
-exports.asString = function(/*format,*/ date, timezoneOffset) {
-  /*jshint -W071 */
-  var format = exports.ISO8601_FORMAT;
-  if (typeof(date) === "string") {
-    format = arguments[0];
-    date = arguments[1];
-    timezoneOffset = arguments[2];
-  }
-  // make the date independent of the system timezone by working with UTC
-  if (timezoneOffset === undefined) {
-    timezoneOffset = date.getTimezoneOffset();
-  }
-  date.setUTCMinutes(date.getUTCMinutes() - timezoneOffset);
-  var vDay = addZero(date.getUTCDate());
-  var vMonth = addZero(date.getUTCMonth()+1);
-  var vYearLong = addZero(date.getUTCFullYear());
-  var vYearShort = addZero(date.getUTCFullYear().toString().substring(2,4));
-  var vYear = (format.indexOf("yyyy") > -1 ? vYearLong : vYearShort);
-  var vHour  = addZero(date.getUTCHours());
-  var vMinute = addZero(date.getUTCMinutes());
-  var vSecond = addZero(date.getUTCSeconds());
-  var vMillisecond = padWithZeros(date.getUTCMilliseconds(), 3);
-  var vTimeZone = offset(timezoneOffset);
-  date.setUTCMinutes(date.getUTCMinutes() + timezoneOffset);
-  var formatted = format
-    .replace(/dd/g, vDay)
-    .replace(/MM/g, vMonth)
-    .replace(/y{1,4}/g, vYear)
-    .replace(/hh/g, vHour)
-    .replace(/mm/g, vMinute)
-    .replace(/ss/g, vSecond)
-    .replace(/SSS/g, vMillisecond)
-    .replace(/O/g, vTimeZone);
-  return formatted;
-
-};
-/*jshint +W071 */
-
-},{}],13:[function(require,module,exports){
-(function (process){
-"use strict";
-var dateFormat = require('./date_format')
-, os = require('os')
-, eol = os.EOL || '\n'
-, util = require('util')
-, replacementRegExp = /%[sdj]/g
-, layoutMakers = {
-  "messagePassThrough": function() { return messagePassThroughLayout; },
-  "basic": function() { return basicLayout; },
-  "colored": function() { return colouredLayout; },
-  "coloured": function() { return colouredLayout; },
-  "pattern": function (config) {
-    return patternLayout(config && config.pattern, config && config.tokens);
-	},
-  "dummy": function() { return dummyLayout; }
-}
-, colours = {
-  ALL: "grey",
-  TRACE: "blue",
-  DEBUG: "cyan",
-  INFO: "green",
-  WARN: "yellow",
-  ERROR: "red",
-  FATAL: "magenta",
-  OFF: "grey"
-};
-
-function wrapErrorsWithInspect(items) {
-  return items.map(function(item) {
-    if ((item instanceof Error) && item.stack) {
-      return { inspect: function() { return util.format(item) + '\n' + item.stack; } };
-    } else {
-      return item;
-    }
-  });
-}
-
-function formatLogData(logData) {
-  var data = Array.isArray(logData) ? logData : Array.prototype.slice.call(arguments);
-  return util.format.apply(util, wrapErrorsWithInspect(data));
-}
-
-var styles = {
-    //styles
-  'bold'      : [1,  22],
-  'italic'    : [3,  23],
-  'underline' : [4,  24],
-  'inverse'   : [7,  27],
-  //grayscale
-  'white'     : [37, 39],
-  'grey'      : [90, 39],
-  'black'     : [90, 39],
-  //colors
-  'blue'      : [34, 39],
-  'cyan'      : [36, 39],
-  'green'     : [32, 39],
-  'magenta'   : [35, 39],
-  'red'       : [31, 39],
-  'yellow'    : [33, 39]
-};
-
-function colorizeStart(style) {
-  return style ? '\x1B[' + styles[style][0] + 'm' : '';
-}
-function colorizeEnd(style) {
-  return style ? '\x1B[' + styles[style][1] + 'm' : '';
-}
-/**
- * Taken from masylum's fork (https://github.com/masylum/log4js-node)
- */
-function colorize (str, style) {
-  return colorizeStart(style) + str + colorizeEnd(style);
-}
-
-function timestampLevelAndCategory(loggingEvent, colour, timezoneOffest) {
-  var output = colorize(
-    formatLogData(
-      '[%s] [%s] %s - '
-      , dateFormat.asString(loggingEvent.startTime, timezoneOffest)
-      , loggingEvent.level
-      , loggingEvent.categoryName
-    )
-    , colour
-  );
-  return output;
-}
-
-/**
- * BasicLayout is a simple layout for storing the logs. The logs are stored
- * in following format:
- * <pre>
- * [startTime] [logLevel] categoryName - message\n
- * </pre>
- *
- * @author Stephan Strittmatter
- */
-function basicLayout (loggingEvent, timezoneOffset) {
-  return timestampLevelAndCategory(
-    loggingEvent,
-    undefined,
-    timezoneOffset
-  ) + formatLogData(loggingEvent.data);
-}
-
-/**
- * colouredLayout - taken from masylum's fork.
- * same as basicLayout, but with colours.
- */
-function colouredLayout (loggingEvent, timezoneOffset) {
-  return timestampLevelAndCategory(
-    loggingEvent,
-    colours[loggingEvent.level.toString()],
-    timezoneOffset
-  ) + formatLogData(loggingEvent.data);
-}
-
-function messagePassThroughLayout (loggingEvent) {
-  return formatLogData(loggingEvent.data);
-}
-
-function dummyLayout(loggingEvent) {
-  return loggingEvent.data[0];
-}
-
-/**
- * PatternLayout
- * Format for specifiers is %[padding].[truncation][field]{[format]}
- * e.g. %5.10p - left pad the log level by 5 characters, up to a max of 10
- * Fields can be any of:
- *  - %r time in toLocaleTimeString format
- *  - %p log level
- *  - %c log category
- *  - %h hostname
- *  - %m log data
- *  - %d date in various formats
- *  - %% %
- *  - %n newline
- *  - %z pid
- *  - %x{<tokenname>} add dynamic tokens to your log. Tokens are specified in the tokens parameter
- * You can use %[ and %] to define a colored block.
- *
- * Tokens are specified as simple key:value objects.
- * The key represents the token name whereas the value can be a string or function
- * which is called to extract the value to put in the log message. If token is not
- * found, it doesn't replace the field.
- *
- * A sample token would be: { "pid" : function() { return process.pid; } }
- *
- * Takes a pattern string, array of tokens and returns a layout function.
- * @param {String} Log format pattern String
- * @param {object} map object of different tokens
- * @param {number} timezone offset in minutes
- * @return {Function}
- * @author Stephan Strittmatter
- * @author Jan Schmidle
- */
-function patternLayout (pattern, tokens, timezoneOffset) {
-  // jshint maxstatements:22
-  var TTCC_CONVERSION_PATTERN  = "%r %p %c - %m%n";
-  var regex = /%(-?[0-9]+)?(\.?[0-9]+)?([\[\]cdhmnprzxy%])(\{([^\}]+)\})?|([^%]+)/;
-
-  pattern = pattern || TTCC_CONVERSION_PATTERN;
-
-  function categoryName(loggingEvent, specifier) {
-    var loggerName = loggingEvent.categoryName;
-    if (specifier) {
-      var precision = parseInt(specifier, 10);
-      var loggerNameBits = loggerName.split(".");
-      if (precision < loggerNameBits.length) {
-        loggerName = loggerNameBits.slice(loggerNameBits.length - precision).join(".");
-      }
-    }
-    return loggerName;
-  }
-
-  function formatAsDate(loggingEvent, specifier) {
-    var format = dateFormat.ISO8601_FORMAT;
-    if (specifier) {
-      format = specifier;
-      // Pick up special cases
-      if (format == "ISO8601") {
-        format = dateFormat.ISO8601_FORMAT;
-      } else if (format == "ISO8601_WITH_TZ_OFFSET") {
-        format = dateFormat.ISO8601_WITH_TZ_OFFSET_FORMAT;
-      } else if (format == "ABSOLUTE") {
-        format = dateFormat.ABSOLUTETIME_FORMAT;
-      } else if (format == "DATE") {
-        format = dateFormat.DATETIME_FORMAT;
-      }
-    }
-    // Format the date
-    return dateFormat.asString(format, loggingEvent.startTime, timezoneOffset);
-  }
-
-  function hostname() {
-    return os.hostname().toString();
-  }
-
-  function formatMessage(loggingEvent) {
-    return formatLogData(loggingEvent.data);
-  }
-
-  function endOfLine() {
-    return eol;
-  }
-
-  function logLevel(loggingEvent) {
-    return loggingEvent.level.toString();
-  }
-
-  function startTime(loggingEvent) {
-    return dateFormat.asString('hh:mm:ss', loggingEvent.startTime, timezoneOffset);
-  }
-
-  function startColour(loggingEvent) {
-    return colorizeStart(colours[loggingEvent.level.toString()]);
-  }
-
-  function endColour(loggingEvent) {
-    return colorizeEnd(colours[loggingEvent.level.toString()]);
-  }
-
-  function percent() {
-    return '%';
-  }
-
-  function pid(loggingEvent) {
-    if (loggingEvent && loggingEvent.pid) {
-      return loggingEvent.pid;
-    } else {
-      return process.pid;
-    }
-  }
-
-  function clusterInfo(loggingEvent, specifier) {
-    if (loggingEvent.cluster && specifier) {
-      return specifier
-        .replace('%m', loggingEvent.cluster.master)
-        .replace('%w', loggingEvent.cluster.worker)
-        .replace('%i', loggingEvent.cluster.workerId);
-    } else if (loggingEvent.cluster) {
-      return loggingEvent.cluster.worker+'@'+loggingEvent.cluster.master;
-    } else {
-      return pid();
-    }
-  }
-
-  function userDefined(loggingEvent, specifier) {
-    if (typeof(tokens[specifier]) !== 'undefined') {
-      if (typeof(tokens[specifier]) === 'function') {
-        return tokens[specifier](loggingEvent);
-      } else {
-        return tokens[specifier];
-      }
-    }
-    return null;
-  }
-
-  var replacers = {
-    'c': categoryName,
-    'd': formatAsDate,
-    'h': hostname,
-    'm': formatMessage,
-    'n': endOfLine,
-    'p': logLevel,
-    'r': startTime,
-    '[': startColour,
-    ']': endColour,
-    'y': clusterInfo,
-    'z': pid,
-    '%': percent,
-    'x': userDefined
-  };
-
-  function replaceToken(conversionCharacter, loggingEvent, specifier) {
-    return replacers[conversionCharacter](loggingEvent, specifier);
-  }
-
-  function truncate(truncation, toTruncate) {
-    var len;
-    if (truncation) {
-      len = parseInt(truncation.substr(1), 10);
-      return toTruncate.substring(0, len);
-    }
-
-    return toTruncate;
-  }
-
-  function pad(padding, toPad) {
-    var len;
-    if (padding) {
-      if (padding.charAt(0) == "-") {
-        len = parseInt(padding.substr(1), 10);
-        // Right pad with spaces
-        while (toPad.length < len) {
-          toPad += " ";
-        }
-      } else {
-        len = parseInt(padding, 10);
-        // Left pad with spaces
-        while (toPad.length < len) {
-          toPad = " " + toPad;
-        }
-      }
-    }
-    return toPad;
-  }
-
-  function truncateAndPad(toTruncAndPad, truncation, padding) {
-    var replacement = toTruncAndPad;
-    replacement = truncate(truncation, replacement);
-    replacement = pad(padding, replacement);
-    return replacement;
-  }
-
-  return function(loggingEvent) {
-    var formattedString = "";
-    var result;
-    var searchString = pattern;
-
-    while ((result = regex.exec(searchString))) {
-      var matchedString = result[0];
-      var padding = result[1];
-      var truncation = result[2];
-      var conversionCharacter = result[3];
-      var specifier = result[5];
-      var text = result[6];
-
-      // Check if the pattern matched was just normal text
-      if (text) {
-        formattedString += "" + text;
-      } else {
-        // Create a raw replacement string based on the conversion
-        // character and specifier
-        var replacement = replaceToken(conversionCharacter, loggingEvent, specifier);
-        formattedString += truncateAndPad(replacement, truncation, padding);
-      }
-      searchString = searchString.substr(result.index + result[0].length);
-    }
-    return formattedString;
-  };
-
-}
-
-module.exports = {
-  basicLayout: basicLayout,
-  messagePassThroughLayout: messagePassThroughLayout,
-  patternLayout: patternLayout,
-  colouredLayout: colouredLayout,
-  coloredLayout: colouredLayout,
-  dummyLayout: dummyLayout,
-  addLayout: function(name, serializerGenerator) {
-    layoutMakers[name] = serializerGenerator;
-  },
-  layout: function(name, config) {
-    return layoutMakers[name] && layoutMakers[name](config);
-  }
-};
-
-}).call(this,require('_process'))
-},{"./date_format":12,"_process":7,"os":3,"util":9}],14:[function(require,module,exports){
-"use strict";
-
-function Level(level, levelStr) {
-  this.level = level;
-  this.levelStr = levelStr;
-}
-
-/**
- * converts given String to corresponding Level
- * @param {String} sArg String value of Level OR Log4js.Level
- * @param {Log4js.Level} defaultLevel default Level, if no String representation
- * @return Level object
- * @type Log4js.Level
- */
-function toLevel(sArg, defaultLevel) {
-  if (!sArg) {
-    return defaultLevel;
-  }
-  if (typeof sArg === "string") {
-    return module.exports[sArg.toUpperCase()] || defaultLevel;
-  }
-  return toLevel(sArg.toString());
-}
-
-Level.prototype.toString = function() {
-  return this.levelStr;
-};
-
-Level.prototype.isLessThanOrEqualTo = function(otherLevel) {
-  if (typeof otherLevel === "string") {
-    otherLevel = toLevel(otherLevel);
-  }
-  return this.level <= otherLevel.level;
-};
-
-Level.prototype.isGreaterThanOrEqualTo = function(otherLevel) {
-  if (typeof otherLevel === "string") {
-    otherLevel = toLevel(otherLevel);
-  }
-  return this.level >= otherLevel.level;
-};
-
-Level.prototype.isEqualTo = function(otherLevel) {
-  if (typeof otherLevel == "string") {
-    otherLevel = toLevel(otherLevel);
-  }
-  return this.level === otherLevel.level;
-};
-
-module.exports = {
-  ALL: new Level(Number.MIN_VALUE, "ALL"),
-  TRACE: new Level(5000, "TRACE"),
-  DEBUG: new Level(10000, "DEBUG"),
-  INFO: new Level(20000, "INFO"),
-  WARN: new Level(30000, "WARN"),
-  ERROR: new Level(40000, "ERROR"),
-  FATAL: new Level(50000, "FATAL"),
-  MARK: new Level(9007199254740992, "MARK"), // 2^53
-  OFF: new Level(Number.MAX_VALUE, "OFF"),
-  toLevel: toLevel
-};
-
-},{}],15:[function(require,module,exports){
-(function (process){
-"use strict";
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @fileoverview log4js is a library to log in JavaScript in similar manner
- * than in log4j for Java. The API should be nearly the same.
- *
- * <h3>Example:</h3>
- * <pre>
- *  var logging = require('log4js');
- *  //add an appender that logs all messages to stdout.
- *  logging.addAppender(logging.consoleAppender());
- *  //add an appender that logs "some-category" to a file
- *  logging.addAppender(logging.fileAppender("file.log"), "some-category");
- *  //get a logger
- *  var log = logging.getLogger("some-category");
- *  log.setLevel(logging.levels.TRACE); //set the Level
- *
- *  ...
- *
- *  //call the log
- *  log.trace("trace me" );
- * </pre>
- *
- * NOTE: the authors below are the original browser-based log4js authors
- * don't try to contact them about bugs in this version :)
- * @version 1.0
- * @author Stephan Strittmatter - http://jroller.com/page/stritti
- * @author Seth Chisamore - http://www.chisamore.com
- * @since 2005-05-20
- * @static
- * Website: http://log4js.berlios.de
- */
-var events = require('events')
-, fs = require('fs')
-, path = require('path')
-, util = require('util')
-, layouts = require('./layouts')
-, levels = require('./levels')
-, loggerModule = require('./logger')
-, LoggingEvent = loggerModule.LoggingEvent
-, Logger = loggerModule.Logger
-, ALL_CATEGORIES = '[all]'
-, appenders = {}
-, loggers = {}
-, appenderMakers = {}
-, appenderShutdowns = {}
-, defaultConfig =   {
-  appenders: [
-    { type: "console" }
-  ],
-  replaceConsole: false
-};
-
-require('./appenders/console');
-
-function hasLogger(logger) {
-  return loggers.hasOwnProperty(logger);
-}
-
-
-function getBufferedLogger(categoryName) {
-    var base_logger = getLogger(categoryName);
-    var logger = {};
-    logger.temp = [];
-    logger.target = base_logger;
-    logger.flush = function () {
-        for (var i = 0; i < logger.temp.length; i++) {
-            var log = logger.temp[i];
-            logger.target[log.level](log.message);
-            delete logger.temp[i];
-        }
-    };
-    logger.trace = function (message) { logger.temp.push({level: 'trace', message: message}); };
-    logger.debug = function (message) { logger.temp.push({level: 'debug', message: message}); };
-    logger.info = function (message) { logger.temp.push({level: 'info', message: message}); };
-    logger.warn = function (message) { logger.temp.push({level: 'warn', message: message}); };
-    logger.error = function (message) { logger.temp.push({level: 'error', message: message}); };
-    logger.fatal = function (message) { logger.temp.push({level: 'fatal', message: message}); };
-
-    return logger;
-}
-
-function normalizeCategory (category) {
-  return  category + '.';
-}
-
-function doesLevelEntryContainsLogger (levelCategory, loggerCategory) {
-  var normalizedLevelCategory = normalizeCategory(levelCategory);
-  var normalizedLoggerCategory = normalizeCategory(loggerCategory);
-  return normalizedLoggerCategory.substring(0, normalizedLevelCategory.length) == normalizedLevelCategory; //jshint ignore:line
-}
-
-function doesAppenderContainsLogger (appenderCategory, loggerCategory) {
-  var normalizedAppenderCategory = normalizeCategory(appenderCategory);
-  var normalizedLoggerCategory = normalizeCategory(loggerCategory);
-  return normalizedLoggerCategory.substring(0, normalizedAppenderCategory.length) == normalizedAppenderCategory; //jshint ignore:line
-}
-
-
-/**
- * Get a logger instance. Instance is cached on categoryName level.
- * @param  {String} categoryName name of category to log to.
- * @return {Logger} instance of logger for the category
- * @static
- */
-function getLogger (loggerCategoryName) {
-
-  // Use default logger if categoryName is not specified or invalid
-  if (typeof loggerCategoryName !== "string") {
-    loggerCategoryName = Logger.DEFAULT_CATEGORY;
-  }
-
-  if (!hasLogger(loggerCategoryName)) {
-
-    var level;
-
-    /* jshint -W073 */
-    // If there's a "levels" entry in the configuration
-    if (levels.config) {
-      // Goes through the categories in the levels configuration entry,
-      // starting with the "higher" ones.
-      var keys = Object.keys(levels.config).sort();
-      for (var idx = 0; idx < keys.length; idx++) {
-        var levelCategory = keys[idx];
-        if (doesLevelEntryContainsLogger(levelCategory, loggerCategoryName)) {
-          // level for the logger
-          level = levels.config[levelCategory];
-        }
-      }
-    }
-    /* jshint +W073 */
-
-    // Create the logger for this name if it doesn't already exist
-    loggers[loggerCategoryName] = new Logger(loggerCategoryName, level);
-
-    /* jshint -W083 */
-    var appenderList;
-    for(var appenderCategory in appenders) {
-      if (doesAppenderContainsLogger(appenderCategory, loggerCategoryName)) {
-        appenderList = appenders[appenderCategory];
-        appenderList.forEach(function(appender) {
-          loggers[loggerCategoryName].addListener("log", appender);
-        });
-      }
-    }
-    /* jshint +W083 */
-
-    if (appenders[ALL_CATEGORIES]) {
-      appenderList = appenders[ALL_CATEGORIES];
-      appenderList.forEach(function(appender) {
-        loggers[loggerCategoryName].addListener("log", appender);
-      });
-    }
-  }
-
-  return loggers[loggerCategoryName];
-}
-
-/**
- * args are appender, then zero or more categories
- */
-function addAppender () {
-  var args = Array.prototype.slice.call(arguments);
-  var appender = args.shift();
-  if (args.length === 0 || args[0] === undefined) {
-    args = [ ALL_CATEGORIES ];
-  }
-  //argument may already be an array
-  if (Array.isArray(args[0])) {
-    args = args[0];
-  }
-
-  args.forEach(function(appenderCategory) {
-    addAppenderToCategory(appender, appenderCategory);
-
-    if (appenderCategory === ALL_CATEGORIES) {
-      addAppenderToAllLoggers(appender);
-    } else {
-
-      for(var loggerCategory in loggers) {
-        if (doesAppenderContainsLogger(appenderCategory,loggerCategory)) {
-          loggers[loggerCategory].addListener("log", appender);
-        }
-      }
-
-    }
-  });
-}
-
-function addAppenderToAllLoggers(appender) {
-  for (var logger in loggers) {
-    if (hasLogger(logger)) {
-      loggers[logger].addListener("log", appender);
-    }
-  }
-}
-
-function addAppenderToCategory(appender, category) {
-  if (!appenders[category]) {
-    appenders[category] = [];
-  }
-  appenders[category].push(appender);
-}
-
-function clearAppenders () {
-  appenders = {};
-  for (var logger in loggers) {
-    if (hasLogger(logger)) {
-      loggers[logger].removeAllListeners("log");
-    }
-  }
-}
-
-function configureAppenders(appenderList, options) {
-  clearAppenders();
-  if (appenderList) {
-    appenderList.forEach(function(appenderConfig) {
-      loadAppender(appenderConfig.type);
-      var appender;
-      appenderConfig.makers = appenderMakers;
-      try {
-        appender = appenderMakers[appenderConfig.type](appenderConfig, options);
-        addAppender(appender, appenderConfig.category);
-      } catch(e) {
-        throw new Error("log4js configuration problem for " + util.inspect(appenderConfig), e);
-      }
-    });
-  }
-}
-
-function configureLevels(_levels) {
-  levels.config = _levels; // Keep it so we can create loggers later using this cfg
-  if (_levels) {
-    var keys = Object.keys(levels.config).sort();
-    for (var idx in keys) {
-      var category = keys[idx];
-      if(category === ALL_CATEGORIES) {
-        setGlobalLogLevel(_levels[category]);
-      }
-      /* jshint -W073 */
-      for(var loggerCategory in loggers) {
-        if (doesLevelEntryContainsLogger(category, loggerCategory)) {
-          loggers[loggerCategory].setLevel(_levels[category]);
-        }
-      }
-      /* jshint +W073 */
-    }
-  }
-}
-
-function setGlobalLogLevel(level) {
-  Logger.prototype.level = levels.toLevel(level, levels.TRACE);
-}
-
-/**
- * Get the default logger instance.
- * @return {Logger} instance of default logger
- * @static
- */
-function getDefaultLogger () {
-  return getLogger(Logger.DEFAULT_CATEGORY);
-}
-
-var configState = {};
-
-function loadConfigurationFile(filename) {
-  if (filename) {
-    return JSON.parse(fs.readFileSync(filename, "utf8"));
-  }
-  return undefined;
-}
-
-function configureOnceOff(config, options) {
-  if (config) {
-    try {
-      configureLevels(config.levels);
-      configureAppenders(config.appenders, options);
-
-      if (config.replaceConsole) {
-        replaceConsole();
-      } else {
-        restoreConsole();
-      }
-    } catch (e) {
-      throw new Error(
-        "Problem reading log4js config " + util.inspect(config) +
-          ". Error was \"" + e.message + "\" (" + e.stack + ")"
-      );
-    }
-  }
-}
-
-function reloadConfiguration(options) {
-  var mtime = getMTime(configState.filename);
-  if (!mtime) return;
-
-  if (configState.lastMTime && (mtime.getTime() > configState.lastMTime.getTime())) {
-    configureOnceOff(loadConfigurationFile(configState.filename), options);
-  }
-  configState.lastMTime = mtime;
-}
-
-function getMTime(filename) {
-  var mtime;
-  try {
-    mtime = fs.statSync(configState.filename).mtime;
-  } catch (e) {
-    getLogger('log4js').warn('Failed to load configuration file ' + filename);
-  }
-  return mtime;
-}
-
-function initReloadConfiguration(filename, options) {
-  if (configState.timerId) {
-    clearInterval(configState.timerId);
-    delete configState.timerId;
-  }
-  configState.filename = filename;
-  configState.lastMTime = getMTime(filename);
-  configState.timerId = setInterval(reloadConfiguration, options.reloadSecs*1000, options);
-}
-
-function configure(configurationFileOrObject, options) {
-  var config = configurationFileOrObject;
-  config = config || process.env.LOG4JS_CONFIG;
-  options = options || {};
-
-  if (config === undefined || config === null || typeof(config) === 'string') {
-    if (options.reloadSecs) {
-      initReloadConfiguration(config, options);
-    }
-    config = loadConfigurationFile(config) || defaultConfig;
-  } else {
-    if (options.reloadSecs) {
-      getLogger('log4js').warn(
-        'Ignoring configuration reload parameter for "object" configuration.'
-      );
-    }
-  }
-  configureOnceOff(config, options);
-}
-
-var originalConsoleFunctions = {
-  log: console.log,
-  debug: console.debug,
-  info: console.info,
-  warn: console.warn,
-  error: console.error
-};
-
-function replaceConsole(logger) {
-  function replaceWith(fn) {
-    return function() {
-      fn.apply(logger, arguments);
-    };
-  }
-  logger = logger || getLogger("console");
-  ['log','debug','info','warn','error'].forEach(function (item) {
-    console[item] = replaceWith(item === 'log' ? logger.info : logger[item]);
-  });
-}
-
-function restoreConsole() {
-  ['log', 'debug', 'info', 'warn', 'error'].forEach(function (item) {
-    console[item] = originalConsoleFunctions[item];
-  });
-}
-
-/**
- * Load an appenderModule based on the provided appender filepath. Will first
- * check if the appender path is a subpath of the log4js "lib/appenders" directory.
- * If not, it will attempt to load the the appender as complete path.
- *
- * @param {string} appender The filepath for the appender.
- * @returns {Object|null} The required appender or null if appender could not be loaded.
- * @private
- */
-function requireAppender(appender) {
-  var appenderModule;
-  try {
-    appenderModule = require('./appenders/' + appender);
-  } catch (e) {
-    appenderModule = require(appender);
-  }
-  return appenderModule;
-}
-
-/**
- * Load an appender. Provided the appender path to be loaded. If appenderModule is defined,
- * it will be used in place of requiring the appender module.
- *
- * @param {string} appender The path to the appender module.
- * @param {Object|void} [appenderModule] The pre-required appender module. When provided,
- * instead of requiring the appender by its path, this object will be used.
- * @returns {void}
- * @private
- */
-function loadAppender(appender, appenderModule) {
-  appenderModule = appenderModule || requireAppender(appender);
-
-  if (!appenderModule) {
-    throw new Error("Invalid log4js appender: " + util.inspect(appender));
-  }
-
-  module.exports.appenders[appender] = appenderModule.appender.bind(appenderModule);
-  if (appenderModule.shutdown) {
-    appenderShutdowns[appender] = appenderModule.shutdown.bind(appenderModule);
-  }
-  appenderMakers[appender] = appenderModule.configure.bind(appenderModule);
-}
-
-/**
- * Shutdown all log appenders. This will first disable all writing to appenders
- * and then call the shutdown function each appender.
- *
- * @params {Function} cb - The callback to be invoked once all appenders have
- *  shutdown. If an error occurs, the callback will be given the error object
- *  as the first argument.
- * @returns {void}
- */
-function shutdown(cb) {
-  // First, disable all writing to appenders. This prevents appenders from
-  // not being able to be drained because of run-away log writes.
-  loggerModule.disableAllLogWrites();
-
-  // Call each of the shutdown functions in parallel
-  var completed = 0;
-  var error;
-  var shutdownFcts = [];
-  var complete = function(err) {
-    error = error || err;
-    completed++;
-    if (completed >= shutdownFcts.length) {
-      cb(error);
-    }
-  };
-  for (var category in appenderShutdowns) {
-    if (appenderShutdowns.hasOwnProperty(category)) {
-      shutdownFcts.push(appenderShutdowns[category]);
-    }
-  }
-  if (!shutdownFcts.length) {
-    return cb();
-  }
-  shutdownFcts.forEach(function(shutdownFct) { shutdownFct(complete); });
-}
-
-module.exports = {
-  getBufferedLogger: getBufferedLogger,
-  getLogger: getLogger,
-  getDefaultLogger: getDefaultLogger,
-  hasLogger: hasLogger,
-
-  addAppender: addAppender,
-  loadAppender: loadAppender,
-  clearAppenders: clearAppenders,
-  configure: configure,
-  shutdown: shutdown,
-
-  replaceConsole: replaceConsole,
-  restoreConsole: restoreConsole,
-
-  levels: levels,
-  setGlobalLogLevel: setGlobalLogLevel,
-
-  layouts: layouts,
-  appenders: {},
-  appenderMakers: appenderMakers,
-  connectLogger: require('./connect-logger').connectLogger
-};
-
-//set ourselves up
-configure();
-
-}).call(this,require('_process'))
-},{"./appenders/console":10,"./connect-logger":11,"./layouts":13,"./levels":14,"./logger":16,"_process":7,"events":4,"fs":2,"path":6,"util":9}],16:[function(require,module,exports){
-"use strict";
-var levels = require('./levels')
-, util = require('util')
-, events = require('events')
-, DEFAULT_CATEGORY = '[default]';
-
-var logWritesEnabled = true;
-
-/**
- * Models a logging event.
- * @constructor
- * @param {String} categoryName name of category
- * @param {Log4js.Level} level level of message
- * @param {Array} data objects to log
- * @param {Log4js.Logger} logger the associated logger
- * @author Seth Chisamore
- */
-function LoggingEvent (categoryName, level, data, logger) {
-  this.startTime = new Date();
-  this.categoryName = categoryName;
-  this.data = data;
-  this.level = level;
-  this.logger = logger;
-}
-
-/**
- * Logger to log messages.
- * use {@see Log4js#getLogger(String)} to get an instance.
- * @constructor
- * @param name name of category to log to
- * @author Stephan Strittmatter
- */
-function Logger (name, level) {
-  this.category = name || DEFAULT_CATEGORY;
-
-  if (level) {
-    this.setLevel(level);
-  }
-}
-util.inherits(Logger, events.EventEmitter);
-Logger.DEFAULT_CATEGORY = DEFAULT_CATEGORY;
-Logger.prototype.level = levels.TRACE;
-
-Logger.prototype.setLevel = function(level) {
-  this.level = levels.toLevel(level, this.level || levels.TRACE);
-};
-
-Logger.prototype.removeLevel = function() {
-  delete this.level;
-};
-
-Logger.prototype.log = function() {
-  var logLevel = levels.toLevel(arguments[0], levels.INFO);
-  if (!this.isLevelEnabled(logLevel)) {
-    return;
-  }
-  var numArgs = arguments.length - 1;
-  var args = new Array(numArgs);
-  for (var i = 0; i < numArgs; i++) {
-    args[i] = arguments[i + 1];
-  }
-  this._log(logLevel, args);
-};
-
-Logger.prototype.isLevelEnabled = function(otherLevel) {
-  return this.level.isLessThanOrEqualTo(otherLevel);
-};
-
-['Trace','Debug','Info','Warn','Error','Fatal', 'Mark'].forEach(
-  function(levelString) {
-    var level = levels.toLevel(levelString);
-    Logger.prototype['is'+levelString+'Enabled'] = function() {
-      return this.isLevelEnabled(level);
-    };
-
-    Logger.prototype[levelString.toLowerCase()] = function () {
-      if (logWritesEnabled && this.isLevelEnabled(level)) {
-        var numArgs = arguments.length;
-        var args = new Array(numArgs);
-        for (var i = 0; i < numArgs; i++) {
-          args[i] = arguments[i];
-        }
-        this._log(level, args);
-      }
-    };
-  }
-);
-
-Logger.prototype._log = function(level, data) {
-  var loggingEvent = new LoggingEvent(this.category, level, data, this);
-  this.emit('log', loggingEvent);
-};
-
-/**
- * Disable all log writes.
- * @returns {void}
- */
-function disableAllLogWrites() {
-  logWritesEnabled = false;
-}
-
-/**
- * Enable log writes.
- * @returns {void}
- */
-function enableAllLogWrites() {
-  logWritesEnabled = true;
-}
-
-exports.LoggingEvent = LoggingEvent;
-exports.Logger = Logger;
-exports.disableAllLogWrites = disableAllLogWrites;
-exports.enableAllLogWrites = enableAllLogWrites;
-
-},{"./levels":14,"events":4,"util":9}],17:[function(require,module,exports){
+},{"./support/isBuffer":15,"_process":14,"inherits":5}],17:[function(require,module,exports){
 'use strict';
 
 var Client = require('./lib/client');
@@ -3137,7 +3137,7 @@ $.CloudifyClient = function (config) {
 };
 
 logger.trace('cloudifyjs is ready for use');
-},{"./lib/client":19,"browser-request":1,"log4js":15}],18:[function(require,module,exports){
+},{"./lib/client":19,"browser-request":1,"log4js":11}],18:[function(require,module,exports){
 'use strict';
 
 
@@ -3307,7 +3307,7 @@ BlueprintsClient.prototype.browseFile = function (blueprint_id, file_path, _incl
 
 
 module.exports = BlueprintsClient;
-},{"log4js":15}],19:[function(require,module,exports){
+},{"log4js":11}],19:[function(require,module,exports){
 'use strict';
 
 
@@ -3334,6 +3334,7 @@ var Search = require('./search');
 var Evaluate = require('./evaluate');
 var Maintenance = require('./maintenance');
 var DeploymentUpdates = require('./deploymentUpdates');
+var Snapshots = require('./snapshots');
 /**
  *
  * @param {ClientConfig} config
@@ -3363,6 +3364,7 @@ function Client( config ){
     this.evaluate = new Evaluate( config );
     this.maintenance = new Maintenance( config );
     this.deploymentUpdates = new DeploymentUpdates( config );
+    this.snapshots = new Snapshots( config );
 }
 
 module.exports = Client;
@@ -3389,7 +3391,7 @@ String.format = function() {
 
     return theString;
 };
-},{"./blueprints":18,"./deploymentUpdates":20,"./deployments":21,"./evaluate":22,"./events":23,"./executions":24,"./maintenance":25,"./manager":26,"./nodeInstances":27,"./nodes":28,"./plugins":29,"./search":30}],20:[function(require,module,exports){
+},{"./blueprints":18,"./deploymentUpdates":20,"./deployments":21,"./evaluate":22,"./events":23,"./executions":24,"./maintenance":25,"./manager":26,"./nodeInstances":27,"./nodes":28,"./plugins":29,"./search":30,"./snapshots":31}],20:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.deploymentUpdates');
 
@@ -3461,7 +3463,7 @@ DeploymentUpdatesClient.prototype.update = function (deploymentId, archive, inpu
 
 module.exports = DeploymentUpdatesClient;
 
-},{"log4js":15}],21:[function(require,module,exports){
+},{"log4js":11}],21:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.deployments');
@@ -3791,7 +3793,7 @@ DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, c
 
 
 module.exports = DeploymentsClient;
-},{"log4js":15}],22:[function(require,module,exports){
+},{"log4js":11}],22:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -3844,7 +3846,7 @@ EvaluateClient.prototype.functions = function( deployment_id, context, payload, 
 
 module.exports = EvaluateClient;
 
-},{"log4js":15}],23:[function(require,module,exports){
+},{"log4js":11}],23:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.events');
 
@@ -3872,7 +3874,7 @@ EventsClient.prototype.get = function(options, callback){
 
 module.exports = EventsClient;
 
-},{"log4js":15}],24:[function(require,module,exports){
+},{"log4js":11}],24:[function(require,module,exports){
 'use strict';
 
 
@@ -4084,7 +4086,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
 
 
 module.exports = ExecutionsClient;
-},{"log4js":15}],25:[function(require,module,exports){
+},{"log4js":11}],25:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.maintenance');
 
@@ -4121,7 +4123,7 @@ MaintenanceClient.prototype.deactivate = function(callback){
 };
 
 module.exports = MaintenanceClient;
-},{"log4js":15}],26:[function(require,module,exports){
+},{"log4js":11}],26:[function(require,module,exports){
 'use strict';
 
 
@@ -4236,7 +4238,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
 
 
 module.exports = ManagerClient;
-},{"log4js":15}],27:[function(require,module,exports){
+},{"log4js":11}],27:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -4372,7 +4374,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
 
 
 module.exports = NodeInstancesClient;
-},{"log4js":15}],28:[function(require,module,exports){
+},{"log4js":11}],28:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -4467,7 +4469,7 @@ NodesClient.prototype.get = function( deployment_id, node_id, _include, callback
 
 module.exports = NodesClient;
 
-},{"log4js":15}],29:[function(require,module,exports){
+},{"log4js":11}],29:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.plugins');
@@ -4566,7 +4568,7 @@ PluginsClient.prototype.upload = function(plugin, callback) {
 };
 
 module.exports = PluginsClient;
-},{"log4js":15}],30:[function(require,module,exports){
+},{"log4js":11}],30:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -4602,4 +4604,137 @@ SearchClient.prototype.run_query = function( query, callback ){
 
 module.exports = SearchClient;
 
-},{"log4js":15}]},{},[17]);
+},{"log4js":11}],31:[function(require,module,exports){
+'use strict';
+var logger = require('log4js').getLogger('cloudify.snapshots');
+
+
+function SnapshotsClient(config){
+    this.config = config;
+}
+
+/**
+ * @description Lists all snapshots.
+ * @param {ApiCallback} callback
+ */
+SnapshotsClient.prototype.list = function(callback) {
+    logger.trace('listing snapshots');
+
+    return this.config.request({
+        'method': 'GET',
+        'json': true,
+        'url': this.config.endpoint + '/snapshots'
+    }, callback);
+};
+
+/**
+ * @description Creates a new snapshot.
+ * @param {string} snapshot_id - The id of the new snapshot.
+ * @param include_metrics - Specifies whether metrics stored in InfluxDB should be included in the created snapshot.
+ * It defaults to false.
+ * @param include_credentials - Specifies whether agent SSH keys (including those specified in uploaded blueprints)
+ * should be included in the created snapshot. It defaults to false.
+ * @param {ApiCallback} callback
+ */
+SnapshotsClient.prototype.create = function(snapshot_id, include_metrics, include_credentials, callback) {
+    logger.trace('creating snapshot');
+    var qs = {};
+    if (include_metrics) {
+        qs.include_metrics = include_metrics;
+    }
+    if (include_credentials) {
+        qs.include_credentials = include_credentials;
+    }
+
+    return this.config.request({
+        'method': 'PUT',
+        'json': true,
+        'url': String.format(this.config.endpoint + '/snapshots/{0}', snapshot_id),
+        'body': {},
+        'qs': qs
+    }, callback);
+};
+
+/**
+ * @description Deletes an existing snapshot.
+ * @param {string} snapshot_id - The id of the snapshot to be deleted.
+ * @param {ApiCallback} callback
+ */
+SnapshotsClient.prototype.delete = function(snapshot_id, callback) {
+    logger.trace('deleting snapshot');
+
+    return this.config.request({
+        'method': 'DELETE',
+        'json': true,
+        'url': String.format(this.config.endpoint + '/snapshots/{0}', snapshot_id)
+    }, callback);
+};
+
+/**
+ * @description Restores the specified snapshot on the manager.
+ * @param {string} snapshot_id - The id of the snapshot to be restored.
+ * @param force - Specifies whether to force restoring the snapshot on a manager that already contains
+ * blueprints/deployments.
+ * @param recreate_deployments_envs - Specifies whether deployment environments should be created for restored
+ * deployments.
+ * @param {ApiCallback} callback
+ */
+SnapshotsClient.prototype.restore = function(snapshot_id, force, recreate_deployments_envs, callback) {
+    logger.trace('restoring snapshot');
+
+    return this.config.request({
+        'method': 'POST',
+        'json': true,
+        'url': String.format(this.config.endpoint + '/snapshots/{0}/restore', snapshot_id),
+        'body': {
+            'force': !!force,
+            'recreate_deployments_envs': !!recreate_deployments_envs
+        }
+    }, callback);
+};
+
+/**
+ *
+ * @description Downloads an existing snapshot.
+ * @param {string} snapshot_id - The id of the snapshot to be downloaded.
+ * @param {ApiCallback} callback
+ */
+SnapshotsClient.prototype.download = function(snapshot_id, callback) {
+    logger.trace('downloading snapshot');
+
+    return this.config.request({
+        'method': 'GET',
+        'json': true,
+        'url': String.format(this.config.endpoint + '/snapshots/{0}/archive', snapshot_id)
+    }, callback);
+};
+
+/**
+ *
+ * @description Uploads a snapshot to the Cloudify Manager. The call expects a application/octet-stream content type
+ * where the content is a zip archive. It is possible to upload a snapshot from a URL by specifying the URL in the
+ * snapshot_archive_url request body property.
+ * @param snapshot_id - The id of the snapshot to be uploaded.
+ * @param {(string|file)} snapshot - The snapshot archive local path or a URL of the snapshot archive to be uploaded.
+ * The snapshot will be downloaded by the manager.
+ * @param {ApiCallback} callback
+ */
+SnapshotsClient.prototype.upload = function(snapshot_id, snapshot, callback) {
+    logger.trace('uploading snapshot');
+    var qs;
+    if (typeof snapshot === 'string') {
+        qs = {snapshot_archive_url: snapshot};
+    }
+
+    return this.config.request({
+        'method': 'PUT',
+        'json': true,
+        'url': String.format(this.config.endpoint + '/snapshots/{0}/archive', snapshot_id),
+        'body': !qs && snapshot,
+        'qs': qs
+    }, callback);
+};
+
+module.exports = SnapshotsClient;
+
+},{"log4js":11}]},{},[17]);

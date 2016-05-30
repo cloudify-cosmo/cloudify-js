@@ -24,6 +24,7 @@ var Search = require('./search');
 var Evaluate = require('./evaluate');
 var Maintenance = require('./maintenance');
 var DeploymentUpdates = require('./deploymentUpdates');
+var Snapshots = require('./snapshots');
 /**
  *
  * @param {ClientConfig} config
@@ -53,6 +54,7 @@ function Client( config ){
     this.evaluate = new Evaluate( config );
     this.maintenance = new Maintenance( config );
     this.deploymentUpdates = new DeploymentUpdates( config );
+    this.snapshots = new Snapshots( config );
 }
 
 module.exports = Client;
