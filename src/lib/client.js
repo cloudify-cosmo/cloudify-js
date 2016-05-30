@@ -15,6 +15,7 @@
 var Blueprints = require('./blueprints');
 var Events = require('./events');
 var Deployments = require('./deployments');
+var Plugins = require('./plugins');
 var Executions = require('./executions');
 var Manager = require('./manager');
 var NodeInstances = require('./nodeInstances');
@@ -43,6 +44,7 @@ function Client( config ){
     this.blueprints = new Blueprints( config );
     this.events = new Events( config );
     this.deployments = new Deployments( config );
+    this.plugins = new Plugins( config );
     this.executions = new Executions( config );
     this.manager = new Manager( config );
     this.nodeInstances = new NodeInstances( config );
