@@ -61,7 +61,7 @@ DeploymentUpdatesClient.prototype.update = function (deploymentId, archive, inpu
     return this.config.request({
         'method': 'POST',
         'json': json,
-        'url': this.config.endpoint + '/deployment-updates/'+deploymentId+'/update',
+        'url': this.config.endpoint + '/deployment-updates/'+deploymentId+'/update/initiate',
         'qs': qs,
         'body': body
     }, callback );
