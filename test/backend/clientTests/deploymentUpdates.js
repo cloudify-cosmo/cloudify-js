@@ -5,7 +5,8 @@ var expect = require('expect.js');
 describe('deploymentUpdates:', function(){
 
     it('should update from a url with default workflow and get it', function(done){
-        testClient.deploymentUpdates.update('nodecellar_updated', 'https://github.com/cloudify-cosmo/cloudify-nodecellar-example/archive/3.3.1.zip', undefined, 'local-blueprint.yaml', {skipInstall: false, skipUninstall:false}, function(err, response, body) {
+        testClient.deploymentUpdates.update('nodecellar_updated', 'https://github.com/cloudify-cosmo/cloudify-nodecellar-example/archive/3.4m5.zip', undefined, 'local-blueprint.yaml', {skipInstall: false, skipUninstall:false}, function(err, response, body) {
+            expect(body).to.be('dev');
             expect(response.statusCode).to.be(200);
             expect(body.deployment_id).to.be('nodecellar_updated');
             expect(body.id).not.to.be(undefined);
