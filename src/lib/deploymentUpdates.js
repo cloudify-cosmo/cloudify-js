@@ -1,5 +1,6 @@
 'use strict';
 var logger = require('log4js').getLogger('cloudify.deploymentUpdates');
+var FormData = FormData || require('form-data');
 
 function DeploymentUpdatesClient( config ){
     this.config = config;

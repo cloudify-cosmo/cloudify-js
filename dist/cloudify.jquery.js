@@ -510,10 +510,14 @@ function b64_enc (data) {
 //UMD FOOTER END
 
 },{}],2:[function(require,module,exports){
+/* eslint-env browser */
+module.exports = FormData;
 
 },{}],3:[function(require,module,exports){
-arguments[4][2][0].apply(exports,arguments)
-},{"dup":2}],4:[function(require,module,exports){
+
+},{}],4:[function(require,module,exports){
+arguments[4][3][0].apply(exports,arguments)
+},{"dup":3}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -816,7 +820,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -841,7 +845,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1069,7 +1073,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":7}],7:[function(require,module,exports){
+},{"_process":8}],8:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1129,14 +1133,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1726,7 +1730,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":8,"_process":7,"inherits":5}],10:[function(require,module,exports){
+},{"./support/isBuffer":9,"_process":8,"inherits":6}],11:[function(require,module,exports){
 "use strict";
 var layouts = require('../layouts')
 , consoleLog = console.log.bind(console);
@@ -1749,7 +1753,7 @@ function configure(config) {
 exports.appender = consoleAppender;
 exports.configure = configure;
 
-},{"../layouts":13}],11:[function(require,module,exports){
+},{"../layouts":14}],12:[function(require,module,exports){
 "use strict";
 var levels = require("./levels");
 var _ = require('underscore');
@@ -1975,7 +1979,7 @@ function createNoLogCondition(nolog) {
 
 exports.connectLogger = getLogger;
 
-},{"./levels":14,"underscore":18}],12:[function(require,module,exports){
+},{"./levels":15,"underscore":19}],13:[function(require,module,exports){
 "use strict";
 exports.ISO8601_FORMAT = "yyyy-MM-dd hh:mm:ss.SSS";
 exports.ISO8601_WITH_TZ_OFFSET_FORMAT = "yyyy-MM-ddThh:mm:ssO";
@@ -2049,7 +2053,7 @@ exports.asString = function(/*format,*/ date, timezoneOffset) {
 
 };
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (process){
 "use strict";
 var dateFormat = require('./date_format')
@@ -2395,7 +2399,7 @@ module.exports = {
 };
 
 }).call(this,require('_process'))
-},{"./date_format":12,"_process":7,"os":3,"util":9}],14:[function(require,module,exports){
+},{"./date_format":13,"_process":8,"os":4,"util":10}],15:[function(require,module,exports){
 "use strict";
 
 function Level(level, levelStr) {
@@ -2466,7 +2470,7 @@ module.exports = {
   toLevel: toLevel
 };
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (process){
 "use strict";
 /*
@@ -2944,7 +2948,7 @@ configure();
 
 
 }).call(this,require('_process'))
-},{"./appenders/console":10,"./connect-logger":11,"./layouts":13,"./levels":14,"./logger":16,"_process":7,"async":17,"events":4,"fs":2,"path":6,"util":9}],16:[function(require,module,exports){
+},{"./appenders/console":11,"./connect-logger":12,"./layouts":14,"./levels":15,"./logger":17,"_process":8,"async":18,"events":5,"fs":3,"path":7,"util":10}],17:[function(require,module,exports){
 "use strict";
 var levels = require('./levels')
 , util = require('util')
@@ -3048,7 +3052,7 @@ exports.Logger = Logger;
 exports.disableAllLogWrites = disableAllLogWrites;
 exports.enableAllLogWrites = enableAllLogWrites;
 
-},{"./levels":14,"events":4,"util":9}],17:[function(require,module,exports){
+},{"./levels":15,"events":5,"util":10}],18:[function(require,module,exports){
 (function (process){
 /*global setImmediate: false, setTimeout: false, console: false */
 (function () {
@@ -4010,7 +4014,7 @@ exports.enableAllLogWrites = enableAllLogWrites;
 }());
 
 }).call(this,require('_process'))
-},{"_process":7}],18:[function(require,module,exports){
+},{"_process":8}],19:[function(require,module,exports){
 //     Underscore.js 1.8.2
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -5548,7 +5552,7 @@ exports.enableAllLogWrites = enableAllLogWrites;
   }
 }.call(this));
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 var Client = require('./lib/client');
@@ -5579,7 +5583,7 @@ $.CloudifyClient = function (config) {
 };
 
 logger.trace('cloudifyjs is ready for use');
-},{"./lib/client":21,"browser-request":1,"log4js":15}],20:[function(require,module,exports){
+},{"./lib/client":22,"browser-request":1,"log4js":16}],21:[function(require,module,exports){
 'use strict';
 
 
@@ -5749,7 +5753,7 @@ BlueprintsClient.prototype.browseFile = function (blueprint_id, file_path, _incl
 
 
 module.exports = BlueprintsClient;
-},{"log4js":15}],21:[function(require,module,exports){
+},{"log4js":16}],22:[function(require,module,exports){
 'use strict';
 
 
@@ -5833,9 +5837,10 @@ String.format = function() {
 
     return theString;
 };
-},{"./blueprints":20,"./deploymentUpdates":22,"./deployments":23,"./evaluate":24,"./events":25,"./executions":26,"./maintenance":27,"./manager":28,"./nodeInstances":29,"./nodes":30,"./plugins":31,"./search":32,"./snapshots":33}],22:[function(require,module,exports){
+},{"./blueprints":21,"./deploymentUpdates":23,"./deployments":24,"./evaluate":25,"./events":26,"./executions":27,"./maintenance":28,"./manager":29,"./nodeInstances":30,"./nodes":31,"./plugins":32,"./search":33,"./snapshots":34}],23:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.deploymentUpdates');
+var FormData = FormData || require('form-data');
 
 function DeploymentUpdatesClient( config ){
     this.config = config;
@@ -5905,7 +5910,7 @@ DeploymentUpdatesClient.prototype.update = function (deploymentId, archive, inpu
 
 module.exports = DeploymentUpdatesClient;
 
-},{"log4js":15}],23:[function(require,module,exports){
+},{"form-data":2,"log4js":16}],24:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.deployments');
@@ -6235,7 +6240,7 @@ DeploymentsClient.prototype.get_workflows = function( deployment_id, _include, c
 
 
 module.exports = DeploymentsClient;
-},{"log4js":15}],24:[function(require,module,exports){
+},{"log4js":16}],25:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6288,7 +6293,7 @@ EvaluateClient.prototype.functions = function( deployment_id, context, payload, 
 
 module.exports = EvaluateClient;
 
-},{"log4js":15}],25:[function(require,module,exports){
+},{"log4js":16}],26:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.events');
 
@@ -6316,7 +6321,7 @@ EventsClient.prototype.get = function(options, callback){
 
 module.exports = EventsClient;
 
-},{"log4js":15}],26:[function(require,module,exports){
+},{"log4js":16}],27:[function(require,module,exports){
 'use strict';
 
 
@@ -6528,7 +6533,7 @@ ExecutionsClient.prototype.cancel = function( execution_id, force, callback ){
 
 
 module.exports = ExecutionsClient;
-},{"log4js":15}],27:[function(require,module,exports){
+},{"log4js":16}],28:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.maintenance');
 
@@ -6565,7 +6570,7 @@ MaintenanceClient.prototype.deactivate = function(callback){
 };
 
 module.exports = MaintenanceClient;
-},{"log4js":15}],28:[function(require,module,exports){
+},{"log4js":16}],29:[function(require,module,exports){
 'use strict';
 
 
@@ -6680,7 +6685,7 @@ ManagerClient.prototype.create_context = function( name, context, callback ){
 
 
 module.exports = ManagerClient;
-},{"log4js":15}],29:[function(require,module,exports){
+},{"log4js":16}],30:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6816,7 +6821,7 @@ NodeInstancesClient.prototype.list = function( deployment_id, _include , callbac
 
 
 module.exports = NodeInstancesClient;
-},{"log4js":15}],30:[function(require,module,exports){
+},{"log4js":16}],31:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -6911,7 +6916,7 @@ NodesClient.prototype.get = function( deployment_id, node_id, _include, callback
 
 module.exports = NodesClient;
 
-},{"log4js":15}],31:[function(require,module,exports){
+},{"log4js":16}],32:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.plugins');
@@ -7010,7 +7015,7 @@ PluginsClient.prototype.upload = function(plugin, callback) {
 };
 
 module.exports = PluginsClient;
-},{"log4js":15}],32:[function(require,module,exports){
+},{"log4js":16}],33:[function(require,module,exports){
 'use strict';
 
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
@@ -7046,7 +7051,7 @@ SearchClient.prototype.run_query = function( query, callback ){
 
 module.exports = SearchClient;
 
-},{"log4js":15}],33:[function(require,module,exports){
+},{"log4js":16}],34:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.snapshots');
 
@@ -7179,4 +7184,4 @@ SnapshotsClient.prototype.upload = function(snapshot_id, snapshot, callback) {
 
 module.exports = SnapshotsClient;
 
-},{"log4js":15}]},{},[19]);
+},{"log4js":16}]},{},[20]);

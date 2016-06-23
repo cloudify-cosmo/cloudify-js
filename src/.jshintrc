@@ -25,5 +25,6 @@
         "beforeEach": false,
         "describe": false,
         "it": false
-    }
+    },
+    "predef": [ "-FormData" ]
 }
