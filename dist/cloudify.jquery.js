@@ -5781,6 +5781,7 @@ var Evaluate = require('./evaluate');
 var Maintenance = require('./maintenance');
 var DeploymentUpdates = require('./deploymentUpdates');
 var Snapshots = require('./snapshots');
+var ProviderContext = require('./providerContext');
 /**
  *
  * @param {ClientConfig} config
@@ -5811,6 +5812,7 @@ function Client( config ){
     this.maintenance = new Maintenance( config );
     this.deploymentUpdates = new DeploymentUpdates( config );
     this.snapshots = new Snapshots( config );
+    this.providerContext = new ProviderContext( config );
 }
 
 module.exports = Client;
@@ -5837,7 +5839,7 @@ String.format = function() {
 
     return theString;
 };
-},{"./blueprints":21,"./deploymentUpdates":23,"./deployments":24,"./evaluate":25,"./events":26,"./executions":27,"./maintenance":28,"./manager":29,"./nodeInstances":30,"./nodes":31,"./plugins":32,"./search":33,"./snapshots":34}],23:[function(require,module,exports){
+},{"./blueprints":21,"./deploymentUpdates":23,"./deployments":24,"./evaluate":25,"./events":26,"./executions":27,"./maintenance":28,"./manager":29,"./nodeInstances":30,"./nodes":31,"./plugins":32,"./providerContext":33,"./search":34,"./snapshots":35}],23:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.deploymentUpdates');
 var FormData = FormData || require('form-data');
@@ -7018,6 +7020,40 @@ module.exports = PluginsClient;
 },{"log4js":16}],33:[function(require,module,exports){
 'use strict';
 
+var logger = require('log4js').getLogger('cloudify.providerContext');
+
+function ProviderContextClient( config ){
+    this.config = config;
+}
+
+ProviderContextClient.prototype.get = function (callback) {
+    logger.trace('getting provider context');
+    return this.config.request({
+        'method': 'GET',
+        'json': true,
+        'url': this.config.endpoint + '/provider/context'
+    }, callback );
+};
+
+ProviderContextClient.prototype.update = function (name, context, callback) {
+    logger.trace('updating provider context');
+    var body = {
+        name: name,
+        context: context
+    };
+    return this.config.request({
+        'method': 'POST',
+        'json': true,
+        'url': this.config.endpoint + '/provider/context?update=true',
+        'body': body
+    }, callback );
+};
+
+
+module.exports = ProviderContextClient;
+},{"log4js":16}],34:[function(require,module,exports){
+'use strict';
+
 var logger = require('log4js').getLogger('cloudify.nodeInstances');
 
 /**
@@ -7051,7 +7087,7 @@ SearchClient.prototype.run_query = function( query, callback ){
 
 module.exports = SearchClient;
 
-},{"log4js":16}],34:[function(require,module,exports){
+},{"log4js":16}],35:[function(require,module,exports){
 'use strict';
 var logger = require('log4js').getLogger('cloudify.snapshots');
 
