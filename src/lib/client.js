@@ -25,6 +25,7 @@ var Evaluate = require('./evaluate');
 var Maintenance = require('./maintenance');
 var DeploymentUpdates = require('./deploymentUpdates');
 var Snapshots = require('./snapshots');
+var ProviderContext = require('./providerContext');
 /**
  *
  * @param {ClientConfig} config
@@ -55,6 +56,7 @@ function Client( config ){
     this.maintenance = new Maintenance( config );
     this.deploymentUpdates = new DeploymentUpdates( config );
     this.snapshots = new Snapshots( config );
+    this.providerContext = new ProviderContext( config );
 }
 
 module.exports = Client;
