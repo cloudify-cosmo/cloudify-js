@@ -52,7 +52,8 @@ PluginsClient.prototype.delete = function(plugin_id, callback) {
     return this.config.request({
         'method': 'DELETE',
         'json': true,
-        'url': String.format(this.config.endpoint + '/plugins/{0}', plugin_id)
+        'url': String.format(this.config.endpoint + '/plugins/{0}', plugin_id),
+        'body': {}
     }, callback);
 };
 
